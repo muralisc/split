@@ -1,0 +1,11 @@
+<html>
+<body>
+<form action="/addusertodb/" method="post">
+{% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="Submit" value = "Register"/>
+</form>
+</body>
+</html>

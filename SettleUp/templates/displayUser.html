@@ -1,0 +1,18 @@
+<html>
+    <body>
+        <table>
+        <tr>
+            <th>username</th>
+            <th>password</th>
+            <th>outstanding</th>
+        </tr>
+        {% for row in dbrows %}
+        <tr>
+            <td>{{ row.username }}</td>
+            <td>{{ row.password  }}</td>
+            <td>{{ row.outstanding  }}</td>
+        </tr>
+        {% endfor%}
+    </table>
+    </body>
+</html>

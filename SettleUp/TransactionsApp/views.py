@@ -1,9 +1,8 @@
 # Create your views here.
-
+import pdb
 from django.shortcuts import render_to_response,redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
-import django
 #from TransactionsApp.forms import 
 from TransactionsApp.models import users,transactions,transactionsForm,addUserForm
 
@@ -37,7 +36,7 @@ def getTransaction(request):
     form = transactionsForm(request.POST)
     if form.is_valid():
         form.save()
-        return redirect('/displayTransactions/one/')
+        return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
         return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
@@ -47,4 +46,35 @@ def displayTransactions(request,kind):
     userdbrows = users.objects.all()
     if cmp(kind,'all')==0:
         dbrows = transactions.objects.all()
+    else:
+        currentUser = users.objects.get(username=kind)
+        dbrows = currentUser.transactions_set1.all()
     return render_to_response('displayTransactions.html',locals(),context_instance=RequestContext(request))
+
+
+def displayDetailedTransactions(request):
+    userstable = users.objects.all()
+    txnstable = transactions.objects.all()
+    rows ={}
+    for i in userstable:
+        rows.update({i.username:0, 'CUM'+i.username:0})
+    table= [dict(rows) for k in range(transactions.objects.count())]
+    i=0
+    for curtxn in txnstable:
+        if i==0:
+            table[i][curtxn.user_paid.username] += curtxn.amount
+            table[i]['CUM'+curtxn.user_paid.username] += curtxn.amount
+            perpersoncost = curtxn.amount/curtxn.users_involved.count()
+            for usrinv in curtxn.users_involved.all():
+                table[i][usrinv.username] -= perpersoncost
+                table[i]['CUM'+usrinv.username] -= perpersoncost
+        if i!=0:
+            table[i][curtxn.user_paid.username] += curtxn.amount
+            table[i]['CUM'+curtxn.user_paid.username] = table[i-1]['CUM'+curtxn.user_paid.username] + curtxn.amount
+            perpersoncost = curtxn.amount/curtxn.users_involved.count()
+            for usrinv in curtxn.users_involved.all():
+                table[i][usrinv.username] -= perpersoncost
+                table[i]['CUM'+usrinv.username] = table[i-1]['CUM'+usrinv.username] - perpersoncost
+        i += 1
+    return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
+

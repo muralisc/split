@@ -15,8 +15,10 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
     (r'^$','SettleUp.TransactionsApp.views.login'),
-    (r'^adduser/$','SettleUp.TransactionsApp.views.useradd'),
+    (r'^adduser/$','SettleUp.TransactionsApp.views.adduser'),
     (r'^addusertodb/$','SettleUp.TransactionsApp.views.addusertodb'),
     (r'^displayusers/$','SettleUp.TransactionsApp.views.displayusers'),
+    (r'^getTransaction/$','SettleUp.TransactionsApp.views.getTransaction'),
+    (r'^displayTransactions/(\w+)/$','SettleUp.TransactionsApp.views.displayTransactions'),
     
 )

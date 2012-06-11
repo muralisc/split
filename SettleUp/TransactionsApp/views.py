@@ -43,12 +43,12 @@ def getTransaction(request):
 
 
 def displayTransactions(request,kind):
-    userdbrows = users.objects.all()
+    userstable= users.objects.all()
     if cmp(kind,'all')==0:
-        dbrows = transactions.objects.all()
+        txnstable= transactions.objects.all()
     else:
         currentUser = users.objects.get(username=kind)
-        dbrows = currentUser.transactions_set1.all()
+        txnstable= currentUser.transactions_set1.all()
     return render_to_response('displayTransactions.html',locals(),context_instance=RequestContext(request))
 
 
@@ -57,24 +57,38 @@ def displayDetailedTransactions(request):
     txnstable = transactions.objects.all()
     rows ={}
     for i in userstable:
-        rows.update({i.username:0, 'CUM'+i.username:0})
+        rows.update({i.username:0})
     table= [dict(rows) for k in range(transactions.objects.count())]
     i=0
-    for curtxn in txnstable:
+    for i,curtxn in enumerate(txnstable):
         if i==0:
             table[i][curtxn.user_paid.username] += curtxn.amount
-            table[i]['CUM'+curtxn.user_paid.username] += curtxn.amount
             perpersoncost = curtxn.amount/curtxn.users_involved.count()
             for usrinv in curtxn.users_involved.all():
                 table[i][usrinv.username] -= perpersoncost
-                table[i]['CUM'+usrinv.username] -= perpersoncost
         if i!=0:
             table[i][curtxn.user_paid.username] += curtxn.amount
-            table[i]['CUM'+curtxn.user_paid.username] = table[i-1]['CUM'+curtxn.user_paid.username] + curtxn.amount
             perpersoncost = curtxn.amount/curtxn.users_involved.count()
             for usrinv in curtxn.users_involved.all():
                 table[i][usrinv.username] -= perpersoncost
-                table[i]['CUM'+usrinv.username] = table[i-1]['CUM'+usrinv.username] - perpersoncost
-        i += 1
+    newtable = [list([None]*(len(userstable)*2+6)) for k in txnstable ]
+    newtable1 = [list([None]*6) for k in txnstable ]
+    for i,I in enumerate(table):
+        for j,J in enumerate(userstable):
+            if i==0:
+                newtable[i][j+6] = table[i][J.username]
+                newtable[i][j+len(userstable)+6] = table[i][J.username]
+            else:
+                newtable[i][j+6] = table[i][J.username]
+                newtable[i][j+len(userstable)+6] = newtable[i][j+6] + newtable[i-1][j+len(userstable)+6]
+    for i,row in enumerate(txnstable):
+        newtable1[i][0] = row.id
+        newtable1[i][1] = row.description
+        newtable1[i][2] = row.amount
+        newtable1[i][3] = row.user_paid
+        newtable1[i][4] = ''
+        for ui_rows in row.users_involved.all():
+            newtable1[i][4] += ui_rows.username+' '
+        newtable1[i][5] = row.timestamp
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
 

@@ -1,7 +1,13 @@
 <html>
     <body>
-	<table >
+	<table border = 1 width=10>
         <tr>
+	<th>id</th>
+            <th>description</th>
+            <th>amount</th>
+            <th>user_paid</th>
+	    <th>users_involved</th>
+	    <th>timestamp</th>
 	   {% for i in userstable %}
 	    <th>{{ i.username }}</th>
 	   {% endfor  %}
@@ -11,18 +17,11 @@
 	   {% endfor  %}
         </tr>		
         
-
-	{% for row in txnstables %}
+		{% for i in newtable %}
         <tr>
-            <td>{{ row.id }}</td>
-            <td>{{ row.username }}</td>
-            <td>{{ row.amount  }}</td>
-            <td>{{ row.user_paid  }}</td>
-            <td>
-				{% for ui_rows in row.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
-	    </td>
-            <td>{{ row.timestamp  }}</td>
-            <td>{{ row.perpersoncost }}</td>
+		{% for j in i%}
+            <td>{{ j|floatformat }}</td>
+        {% endfor%}
         </tr>
         {% endfor%}
 
@@ -32,4 +31,3 @@
 	{% for rows in userstable  %}<a href="/displayTransactions/{{rows.username}}/">{{rows.username}}</a></br>{%endfor%}
     </body>
 </html>
-<!-- rows.update({  :0, 'CUM'+i.username:0 }) -->

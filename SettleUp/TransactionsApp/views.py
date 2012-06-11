@@ -72,7 +72,6 @@ def displayDetailedTransactions(request):
             for usrinv in curtxn.users_involved.all():
                 table[i][usrinv.username] -= perpersoncost
     newtable = [list([None]*(len(userstable)*2+6)) for k in txnstable ]
-    newtable1 = [list([None]*6) for k in txnstable ]
     for i,I in enumerate(table):
         for j,J in enumerate(userstable):
             if i==0:
@@ -82,13 +81,13 @@ def displayDetailedTransactions(request):
                 newtable[i][j+6] = table[i][J.username]
                 newtable[i][j+len(userstable)+6] = newtable[i][j+6] + newtable[i-1][j+len(userstable)+6]
     for i,row in enumerate(txnstable):
-        newtable1[i][0] = row.id
-        newtable1[i][1] = row.description
-        newtable1[i][2] = row.amount
-        newtable1[i][3] = row.user_paid
-        newtable1[i][4] = ''
+        newtable[i][0] = row.id
+        newtable[i][1] = row.description
+        newtable[i][2] = row.amount
+        newtable[i][3] = row.user_paid
+        newtable[i][4] = ''
         for ui_rows in row.users_involved.all():
-            newtable1[i][4] += ui_rows.username+' '
-        newtable1[i][5] = row.timestamp
+            newtable[i][4] += ui_rows.username+' '
+        newtable[i][5] = row.timestamp
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
 

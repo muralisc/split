@@ -19,7 +19,6 @@ urlpatterns = patterns('',
     (r'^addusertodb/$','SettleUp.TransactionsApp.views.addusertodb'),
     (r'^displayusers/$','SettleUp.TransactionsApp.views.displayusers'),
     (r'^getTransaction/$','SettleUp.TransactionsApp.views.getTransaction'),
-    (r'^displayTransactions/(\w+)/$','SettleUp.TransactionsApp.views.displayTransactions'),
-    (r'^displayDetailedTransactions/$','SettleUp.TransactionsApp.views.displayDetailedTransactions'),
+    (r'^displayTransactions/(\w+)/$','SettleUp.TransactionsApp.views.displayDetailedTransactions')
     
 )

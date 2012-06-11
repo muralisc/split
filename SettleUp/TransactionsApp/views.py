@@ -1,5 +1,5 @@
 # Create your views here.
-import pdb
+import pdb            #for set_trace()
 from django.shortcuts import render_to_response,redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
@@ -42,17 +42,7 @@ def getTransaction(request):
         return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
 
 
-def displayTransactions(request,kind):
-    userstable= users.objects.all()
-    if cmp(kind,'all')==0:
-        txnstable= transactions.objects.all()
-    else:
-        currentUser = users.objects.get(username=kind)
-        txnstable= currentUser.transactions_set1.all()
-    return render_to_response('displayTransactions.html',locals(),context_instance=RequestContext(request))
-
-
-def displayDetailedTransactions(request):
+def displayDetailedTransactions(request,kind):
     userstable = users.objects.all()
     txnstable = transactions.objects.all()
     rows ={}
@@ -89,5 +79,27 @@ def displayDetailedTransactions(request):
         for ui_rows in row.users_involved.all():
             newtable[i][4] += ui_rows.username+' '
         newtable[i][5] = row.timestamp
+    
+    if cmp(kind,'all')==0:
+        pass
+    else:
+        currentUser = users.objects.get(username=kind)
+        txn_ids= currentUser.transactions_set1.values('id')
+        txn_ids1= currentUser.transactions_set.values('id')
+        txn_ids_list=[]
+        for i in txn_ids:
+            txn_ids_list.append(i['id'])
+        for i in txn_ids1:
+            txn_ids_list.append(i['id'])
+        temp = newtable
+        newtable =[]
+        for i in temp:
+            if i[0] in txn_ids_list:
+                newtable.append(i)
+#    pdb.set_trace()
+    ordered_userstable = users.objects.order_by('-outstanding')
+    for i,usr_row in enumerate(userstable):
+        usr_row.outstanding = newtable[len(newtable)-1][6+len(userstable)+i]
+        usr_row.save()
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
 

@@ -10,28 +10,24 @@ def login(request):
     return render_to_response('login.html','')
 
 
-def adduser(request):
-    form = addUserForm()
-    return render_to_response('addUser.html',locals())
-
-
 #@csrf_exempt
-def addusertodb(request):
-    form = addUserForm(request.POST)
-    if form.is_valid():
-        if users.objects.filter(username__exact = form.cleaned_data['username']).count() == 0:
-            form.save()
-        else:
-            cd = 'user aleady exist'
+def adduser(request):
+    if request.method == 'POST':
+        form = addUserForm(request.POST)
+        if form.is_valid():
+            if users.objects.filter(username__exact = form.cleaned_data['username']).count() == 0:
+                form.save()
+                return redirect('/displayusers/')
+            else:
+                userexist = True
     else:
-        cd = 'invalid form'
-    return redirect('/displayusers/')
-
+        form = addUserForm()
+    return render_to_response('addUser.html',locals())
 
 def displayusers(request):
     dbrows = users.objects.all()
     return render_to_response('displayUser.html',locals(),context_instance = RequestContext(request))
-    
+
 def getTransaction(request):
     form = transactionsForm(request.POST)
     if form.is_valid():
@@ -79,7 +75,6 @@ def displayDetailedTransactions(request,kind):
         for ui_rows in row.users_involved.all():
             newtable[i][4] += ui_rows.username+' '
         newtable[i][5] = row.timestamp
-    
     if cmp(kind,'all')==0:
         pass
     else:

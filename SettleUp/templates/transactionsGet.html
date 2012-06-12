@@ -1,21 +1,8 @@
 <html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Blueprint Forms Tests</title>
-
-    <!-- Framework CSS -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}blueprint/screen.css" type="text/css" media="screen, projection">
-    <link rel="stylesheet" href="{{ STATIC_URL }}blueprint/print.css" type="text/css" media="print">
-    <!--[if lt IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
-  </head>
+{% include "styles.html" %}
 <body>
-<div class="error">
-          This is a &lt;div&gt; with the class <strong>.error</strong>. <a href="#">Link</a>.
-        </div>
-<div class="error span-12">
-<a href="/displayTransactions/all/">Display All Transactions</a>
-</div>
-<form action="/getTransaction/" method="post">
+<a class="span-6" href="/displayTransactions/all/">Display All Transactions</a>
+<form class="span-6" action="/getTransaction/" method="post">
 {% csrf_token %}
     <table>
         {{ form.as_table }}

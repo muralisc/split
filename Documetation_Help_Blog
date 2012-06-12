@@ -104,7 +104,7 @@ Next came into nottice when using CSS files. for the django dev server to serve 
 
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt ------------------ \_ for some crap @csrf error
-from django.template import RequestContext ---------------------------- /
+from django.template import RequestContext ---------------------------- /  found out that its required for css to load
 import pdb
 
 

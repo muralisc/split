@@ -78,6 +78,8 @@ i used linux(lubuntu) since configuring stuff was a pice of cake just some
 sudo apt-get here and there
 
 python will be alredy there.
+mysql-server
+python-mysqldb
 get django.
 go to folder where you want to 
 setup git.
@@ -125,3 +127,13 @@ Dougalmathew/dynamic form     dynamic class make using type()   -> django refera
 
 Python pass by referance problem. create new objects of standard types using dict() list()
 figured out how to use a CSS framework namely BlueprintCSS
+
+
+Setiing up google app engine to work with django
+dload google appengine and add path to $path eg export PATH=$PATH:/usr/local/google_appengine
+django comes bundled.
+so set up the app.yaml to point to django and set static url and static directory.DETAILS:
+deploying in django.   https://developers.google.com/cloud-sql/docs/django#deploying
+                        has all the app engine commands to run the APP ENGINE devServer and to sync to G apps
+staic fiels how to  -> https://developers.google.com/appengine/docs/python/gettingstarted/staticfiles
+                       https://developers.google.com/appengine/docs/python/config/appconfig#Static_Directory_Handlers

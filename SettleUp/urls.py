@@ -18,6 +18,8 @@ urlpatterns = patterns('',
     (r'^adduser/$','SettleUp.TransactionsApp.views.adduser'),
     (r'^displayusers/$','SettleUp.TransactionsApp.views.displayusers'),
     (r'^getTransaction/$','SettleUp.TransactionsApp.views.getTransaction'),
-    (r'^displayTransactions/(\w+)/$','SettleUp.TransactionsApp.views.displayDetailedTransactions')
+    (r'^displayTransactions/(\w+)/$','SettleUp.TransactionsApp.views.displayDetailedTransactions'),
+    (r'^deleteTransactions/([-]?\d+)/$','SettleUp.TransactionsApp.views.deleteTransactions'),
+    (r'^settleUP/$','SettleUp.TransactionsApp.views.settleUP'),
     
 )

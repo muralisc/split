@@ -20,8 +20,11 @@ def adduser(request):
                 return redirect('/displayusers/')
             else:
                 userexist = True
+        else:
+            pass
     else:
         form = addUserForm()
+
     return render_to_response('addUser.html',locals(),context_instance = RequestContext(request))
 
 def displayusers(request):
@@ -29,13 +32,14 @@ def displayusers(request):
     return render_to_response('displayUser.html',locals(),context_instance = RequestContext(request))
 
 def getTransaction(request):
-    form = transactionsForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('/displayTransactions/all/')
+    if request.method =='POST':
+        form = transactionsForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
-        return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
+    return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
 
 
 def displayDetailedTransactions(request,kind):
@@ -98,3 +102,29 @@ def displayDetailedTransactions(request,kind):
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
 
+
+def deleteTransactions(request,txn_id):
+    if( int(txn_id) >=0 ):
+        txnTOdelete = transactions.objects.get(id=txn_id)
+        txnTOdelete.delete()
+    all_txns = transactions.objects.all()
+    return render_to_response('deleteTransaction.html',locals(),context_instance=RequestContext(request))
+
+
+def settleUP(request):
+    usr_details = users.objects.order_by('-outstanding')
+    settleUPlist = []
+    settleUPTextlist = []
+    for i in usr_details:
+        settleUPlist.append([i.username,i.outstanding])
+    while (len(settleUPlist) != 1):
+        n = len(settleUPlist)
+        if( abs(settleUPlist[0][1])-abs(settleUPlist[n-1][1]) >=0 ):
+            settleUPTextlist.append(settleUPlist[n-1][0]+'->'+settleUPlist[0][0]+' '+str(abs(settleUPlist[n-1][1])))
+            settleUPlist[0][1] = abs(settleUPlist[0][1])-abs(settleUPlist[n-1][1])
+            settleUPlist.pop()
+        else:
+            settleUPTextlist.append(settleUPlist[0][0]+'->'+settleUPlist[n-1][0]+' '+str(abs(settleUPlist[0][1])))
+            settleUPlist[n-1][1] = abs(settleUPlist[0][1])-abs(settleUPlist[n-1][1])
+            settleUPlist.pop(0)
+    return render_to_response('settleUP.html',locals(),context_instance=RequestContext(request))

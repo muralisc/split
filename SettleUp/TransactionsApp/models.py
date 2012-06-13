@@ -35,3 +35,6 @@ class addUserForm(forms.ModelForm):
         model = users
         exclude = ('outstanding',
                 )
+        widgets ={
+                'password': forms.PasswordInput(),
+                }

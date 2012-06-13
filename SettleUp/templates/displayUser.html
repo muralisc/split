@@ -2,19 +2,19 @@
     {% include "styles.html" %}
     <body>
         <table>
-        <tr>
-            <th>username</th>
-            <th>password</th>
-            <th>outstanding</th>
-        </tr>
-        {% for row in dbrows %}
-        <tr>
-            <td>{{ row.username }}</td>
-            <td>{{ row.password  }}</td>
-            <td>{{ row.outstanding  }}</td>
-        </tr>
-        {% endfor%}
-    </table>
-	<a href="/getTransaction/">Go to transaction windows</a>
+            <tr>
+                <th>username</th>
+                <th>password</th>
+                <th>outstanding</th>
+            </tr>
+            {% for row in dbrows %}
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ row.password  }}</td>
+                <td>{{ row.outstanding  }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        <a href="/getTransaction/">Go to transaction windows</a>
     </body>
 </html>

@@ -22,7 +22,7 @@ table, th, td {vertical-align:middle;}
 blockquote:before, blockquote:after, q:before, q:after {content:'';}
 blockquote, q {quotes:"" "";}
 a img {border:none;}
-:focus {outline:0;}
+/*:focus {outline:0;}*/
 
 /* typography.css */
 html {font-size:100.01%;}
@@ -78,7 +78,7 @@ caption {background:#eee;}
 .top {margin-top:0;padding-top:0;}
 .bottom {margin-bottom:0;padding-bottom:0;}
 
-/* forms.css */
+/* forms.css 
 label {font-weight:bold;}
 fieldset {padding:0 1.4em 1.4em 1.4em;margin:0 0 1.5em 0;border:1px solid #ccc;}
 legend {font-weight:bold;font-size:1.2em;margin-top:-0.2em;margin-bottom:1em;}
@@ -101,7 +101,7 @@ form.inline p {margin-bottom:0;}
 .error a, .alert a {color:#8a1f11;}
 .notice a {color:#514721;}
 .success a {color:#264409;}
-.info a {color:#205791;}
+.info a {color:#205791;} */
 
 /* grid.css */
 .container {width:950px;margin:0 auto;}

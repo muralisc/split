@@ -5,23 +5,26 @@
             <div class="prepend-10 last success">
                 <a class="" href="/displayTransactions/all/">Display All Transactions</a>
             </div>
-            <form action="" method="post">
-                {% csrf_token %}
-                <div class="span-17 prepend-5 ">
-                    {% for field in form %}
-                    <div class="span-16 ">
-                        <div class="span-3 label ">
-                            {{ field.label }}
+            <form action="" method="post" class="uniForm">
+                <frameset>
+                    {% csrf_token %}
+                    <div class="span-17 prepend-5">
+                        {% for field in form %}
+                        <div class="span-16  ctrlHolder">
+                            <div class="span-3 label ">
+                                {{ field.label }}
+                            </div>
+                            <div class="span-11 ">
+                                {{field}}
+                            </div>
+                            <p class="formHint">{{field.errors}}</p>
                         </div>
-                        <div class="span-11 ">
-                            {{field}}{{field.errors}}
+                        {% endfor %}
+                        <div class="span-3 lasti buttonHolder">
+                            <input  class="primaryAction" type="Submit" value = "Submit"/>
                         </div>
                     </div>
-                    {% endfor %}
-                    <div class="span-3 last">
-                        <input  type="Submit" value = "Submit"/>
-                    </div>
-                </div>
+                </frameset>
             </form>
         </div>
     </body>

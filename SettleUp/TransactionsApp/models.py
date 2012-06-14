@@ -25,6 +25,8 @@ class transactionsForm(forms.ModelForm):
     class Meta:
         model = transactions
         widgets = {
+                'description':forms.Textarea(attrs={'class':'textInput'}),
+                'amount':forms.TextInput(attrs={'class':'textInput'}),
                 'users_involved':forms.CheckboxSelectMultiple(),
                 }
         exclude = ('perpersoncost',

@@ -137,3 +137,29 @@ deploying in django.   https://developers.google.com/cloud-sql/docs/django#deplo
                         has all the app engine commands to run the APP ENGINE devServer and to sync to G apps
 staic fiels how to  -> https://developers.google.com/appengine/docs/python/gettingstarted/staticfiles
                        https://developers.google.com/appengine/docs/python/config/appconfig#Static_Directory_Handlers
+
+
+    Setting up VIM for Python
+    -------------------------
+
+    Nerdtree       http://www.catonmat.net/blog/vim-plugins-nerdtree-vim/
+    Pydiction       autocomplete
+    Taglist         for showing the class structure
+    Colorswitch     <F3> <F4>
+    python.vim      for syntax highlighting
+    snipMate        for html tag completion. tab mapped to c-j
+
+    14june2012
+    ----------
+Got the ultimate vimrc builder site !!  http://nvie.com/posts/how-i-boosted-my-vim/
+
+Uniform testing
+    <form action="#" class="uniForm">
+    <fieldset>
+    <div class="ctrlHolder">
+    <input class="textInput"
+    <p class="formHint"'
+    <p class="label">
+    div class="buttonHolder">
+    <button type="submit" class="secondaryAction
+    <button type="submit" class="primaryAction

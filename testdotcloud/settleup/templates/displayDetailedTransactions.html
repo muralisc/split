@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block current_head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+            $('#mytable').fixheadertable({
+caption     : 'Table',
+colratio    : [30,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],
+whiteSpace  : 'normal',
+height      : 400,
+zebra       : true,
+sortable    : true,
+rowsPerPage : 10,
+});
+            });
+        </script>
+{% endblock %}
+
+
+{% block content %}
+<div id="font2i" class="span-8">
+    Click on name</br>
+    <a href="/displayTransactions/all/">All Transactions</a></br>
+    {% for rows in ordered_userstable  %}
+    <a href="/displayTransactions/{{rows.username}}/">{{rows.username|add:""}}</a> --> {{rows.outstanding|floatformat}}</br>
+    {%endfor%}
+</div>
+<div class="span-15 last">
+    <a href="/deleteTransactions/-1/">Delete A Transaction</a></br>
+    <a href="/settleUP">SettleUP!!</a></br>
+</div>
+<div class="span-23">
+    <table id="mytable">
+        <thead>
+            <tr id="font4">
+                <th>id</th>
+                <th>description</th>
+                <th>amount</th>
+                <th>user paid</th>
+                <th>users involved</th>
+                <th>timestamp</th>
+
+                {% for i in userstable %}
+                <th>{{ i.username }}</th>
+                {% endfor  %}
+
+                {% for i in userstable %}
+                <th>Cumulative {{ i.username }}</th>
+                {% endfor  %}
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in newtable %}
+            <tr id="font4">
+                {% for j in i%}
+                <td>{{ j }}</td>
+                {% endfor%}
+            </tr>
+            {% endfor%}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

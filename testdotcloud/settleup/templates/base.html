@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html"; charset="utf-8">
+        {% include "styles.html" %}
+        <title>{% block title%} {% endblock %}</title>
+
+
+        <style type="text/css" media="screen">
+            body {
+                background-image: url(http://www.photos-public-domain.com/wp-content/uploads/2011/03/black-parchment-paper-texture.jpg);
+            }
+        </style>
+
+
+        {% block current_head %}
+        {% endblock %}
+
+
+    </head>
+    <body>
+        <div class="container" >
+            {% block header%}
+            <div class="prepend-6">
+                <h1 id="font2">App Name</h1> 
+            </div>
+            {% endblock %}
+
+            {% block content%}
+            {% endblock %}
+
+            {% block footer%}
+            {% endblock %}
+        </div>
+    </body>
+</html>
+

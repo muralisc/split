@@ -5,13 +5,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 #from TransactionsApp.forms import 
 from TransactionsApp.models import users,transactions,transactionsForm,addUserForm
+import urllib
+import pdb
+import re
+import random
 
 def login(request):
     return render_to_response('login.html','',context_instance = RequestContext(request))
 
 
 #@csrf_exempt
-def adduser(request):
+def adduser(request):                    #{{{
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
@@ -27,6 +31,7 @@ def adduser(request):
         form = addUserForm()
 
     return render_to_response('addUser.html',locals(),context_instance = RequestContext(request))
+                                         #}}}
 
 def displayusers(request):
     dbrows = users.objects.all()
@@ -43,7 +48,7 @@ def getTransaction(request):
     return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
 
 
-def displayDetailedTransactions(request,kind):
+def displayDetailedTransactions(request,kind): #{{{
     userstable = users.objects.all()
     txnstable = transactions.objects.all()
     rows ={}
@@ -102,7 +107,7 @@ def displayDetailedTransactions(request,kind):
             usr_row.save()                                                  # update the user table with the latest values
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
-
+                                                   #}}}
 
 def deleteTransactions(request,txn_id):
     if( int(txn_id) >=0 ):
@@ -112,7 +117,7 @@ def deleteTransactions(request,txn_id):
     return render_to_response('deleteTransaction.html',locals(),context_instance=RequestContext(request))
 
 
-def settleUP(request):
+def settleUP(request):  #{{{
     usr_details = users.objects.order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
@@ -129,3 +134,11 @@ def settleUP(request):
             settleUPlist[n-1][1] = abs(settleUPlist[0][1])-abs(settleUPlist[n-1][1])
             settleUPlist.pop(0)
     return render_to_response('settleUP.html',locals(),context_instance=RequestContext(request))
+                        #}}}
+def fetchquote(request):
+    data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
+    quoteslines = re.split('#',data)
+    cur_quo_index = random.randint(0,len(quoteslines)-1)
+    a = quoteslines[cur_quo_index]
+    #pdb.set_trace()
+    return render_to_response('index.html',locals(),context_instance = RequestContext(request))

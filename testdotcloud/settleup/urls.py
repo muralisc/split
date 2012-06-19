@@ -21,5 +21,7 @@ urlpatterns = patterns('',
     (r'^displayTransactions/(\w+)/$','settleup.TransactionsApp.views.displayDetailedTransactions'),
     (r'^deleteTransactions/([-]?\d+)/$','settleup.TransactionsApp.views.deleteTransactions'),
     (r'^settleUP/$','settleup.TransactionsApp.views.settleUP'),
+    (r'^fetchquote/$','settleup.TransactionsApp.views.fetchquote'),
+
     
 )

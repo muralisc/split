@@ -1,6 +1,5 @@
-<html>
-    {% include "styles.html" %}
-    <body>
+{% extends "base.html" %}
+{% block content %}
         <table>
             <tr>
                 <th>username</th>
@@ -16,5 +15,4 @@
             {% endfor%}
         </table>
         <a href="/getTransaction/">Go to transaction windows</a>
-    </body>
-</html>
+{% endblock %}

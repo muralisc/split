@@ -1,15 +1,13 @@
-<html>
-    {% include "styles.html" %}
-    <body>
+{% extends "base.html" %}
+{% block content %}
         {% if userexist %}
         user already exist
         {% endif %}
-        <form class="span-10 prepend-11" action="" method="post">
+        <form class="span-10 " action="" method="post">
             {% csrf_token %}
             <table>
                 {{ form.as_table }}
             </table>
             <input type="Submit" value = "Register"/>
         </form>
-    </body>
-</html>
+{% endblock %}

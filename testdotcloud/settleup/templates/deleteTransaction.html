@@ -1,26 +1,23 @@
-<html>
-    {% include "styles.html" %}
-    <body>
-        <div class="container success">
-            <form class="" action="" method="post">
-                {% csrf_token %}
-                <table>
-                    {% for row in all_txns %}
-                        <tr>
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.username }}</td>
-                            <td>{{ row.amount  }}</td>
-                            <td>{{ row.user_paid  }}</td>
-                            <td>
-                                {% for ui_rows in row.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
-                            </td>
-                            <td>{{ row.timestamp  }}</td>
-                            <td><a href="/deleteTransactions/{{ row.id }}/">delete</a></td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            </form>
-        </div>
-    </body>
-</html>
-
+{% extends "base.html" %}
+{% block content %}
+    <form class="" action="" method="post">
+        {% csrf_token %}
+        <table>
+            {% for row in all_txns %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.username }}</td>
+                <td>{{ row.amount  }}</td>
+                <td>{{ row.user_paid  }}</td>
+                <td>
+                    {% for ui_rows in row.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                </td>
+                <td>{{ row.timestamp  }}</td>
+                <td><a href="/deleteTransactions/{{ row.id }}/">delete</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>
+    <a href="/adduser/">Add User</a>
+    <a href="/getTransaction/">Get Transaction</a>
+{% endblock %}

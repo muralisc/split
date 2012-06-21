@@ -1,5 +1,4 @@
 # Create your views here.
-import pdb            #for set_trace()
 from django.shortcuts import render_to_response,redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
@@ -37,7 +36,7 @@ def displayusers(request):
     dbrows = users.objects.all()
     return render_to_response('displayUser.html',locals(),context_instance = RequestContext(request))
 
-def getTransaction(request):
+def getTransaction(request):     #{{{
     if request.method =='POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
@@ -46,7 +45,7 @@ def getTransaction(request):
     else:
         form = transactionsForm()
     return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
-
+                                     #}}}
 
 def displayDetailedTransactions(request,kind): #{{{
     userstable = users.objects.all()
@@ -109,12 +108,12 @@ def displayDetailedTransactions(request,kind): #{{{
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
                                                    #}}}
 
-def deleteTransactions(request,txn_id):
+def deleteTransactions(request,txn_id):#{{{
     if( int(txn_id) >=0 ):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.delete()
     all_txns = transactions.objects.all()
-    return render_to_response('deleteTransaction.html',locals(),context_instance=RequestContext(request))
+    return render_to_response('deleteTransaction.html',locals(),context_instance=RequestContext(request))#}}}
 
 
 def settleUP(request):  #{{{
@@ -133,12 +132,32 @@ def settleUP(request):  #{{{
             settleUPTextlist.append(settleUPlist[n-1][0]+'->'+settleUPlist[0][0]+' '+str(abs(settleUPlist[0][1])))
             settleUPlist[n-1][1] = abs(settleUPlist[0][1])-abs(settleUPlist[n-1][1])
             settleUPlist.pop(0)
+        #sort the remainig list
+        for j in range(0,len(settleUPlist)-1):
+            temp = settleUPlist[j][1];
+            loc = j
+            for k in range(j+1,len(settleUPlist)-1):
+                if(settleUPlist[k][1] > temp):
+                    temp = settleUPlist[k][1]
+                    loc = k
+            temp = settleUPlist[loc]
+            settleUPlist[loc] = settleUPlist[j]
+            settleUPlist[j] = temp
     return render_to_response('settleUP.html',locals(),context_instance=RequestContext(request))
                         #}}}
-def fetchquote(request):
+def fetchquote(request):#{{{
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
     quoteslines = re.split('#',data)
     cur_quo_index = random.randint(0,len(quoteslines)-1)
     a = quoteslines[cur_quo_index]
     #pdb.set_trace()
     return render_to_response('index.html',locals(),context_instance = RequestContext(request))
+#}}}
+
+def deleteUser(request,usr_id):#{{{
+    if( int(usr_id) >=0 ):
+        usrTOdelete = users.objects.get(id=usr_id)
+        usrTOdelete.delete()
+    all_usrs = users.objects.all()
+    return render_to_response('deleteUser.html',locals(),context_instance=RequestContext(request))#}}}
+    #}}}

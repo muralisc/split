@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="" action="" method="post">
+    {% csrf_token %}
+    <table>
+        {% for row in all_usrs %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.username }}</td>
+            <td>{{ row.outstanding}}</td>
+            <td><a href="/deleteUser/{{ row.id }}/">delete</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</form>
+    <a href="/adduser/">Add User</a>
+    <a href="/getTransaction/">Get Transaction</a>
+{% endblock %}

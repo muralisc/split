@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<form class="" action="" method="post">
-    {% csrf_token %}
-    <table>
+<div class="row-fluid">
+<div class="span2">
+    {% include "navlist.html" %}
+</div>
+<div class="span10">
+        <table class="table table-striped">
         {% for row in all_usrs %}
         <tr>
             <td>{{ row.id }}</td>
@@ -12,7 +15,6 @@
         </tr>
         {% endfor %}
     </table>
-</form>
-    <a href="/adduser/">Add User</a>
-    <a href="/getTransaction/">Get Transaction</a>
+</div>
+</div>
 {% endblock %}

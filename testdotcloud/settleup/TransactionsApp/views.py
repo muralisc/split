@@ -3,7 +3,7 @@ from django.shortcuts import render_to_response,redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 #from TransactionsApp.forms import 
-from TransactionsApp.models import users,transactions,transactionsForm,addUserForm
+from TransactionsApp.models import users,transactions,transactionsForm,addUserForm,quotes
 import urllib
 import pdb
 import re
@@ -145,12 +145,22 @@ def settleUP(request):  #{{{
             settleUPlist[j] = temp
     return render_to_response('settleUP.html',locals(),context_instance=RequestContext(request))
                         #}}}
+
 def fetchquote(request):#{{{
+
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
     quoteslines = re.split('#',data)
-    cur_quo_index = random.randint(0,len(quoteslines)-1)
-    a = quoteslines[cur_quo_index]
-    #pdb.set_trace()
+    unshownQueryset = quotes.objects.filter(shown=0)
+    if (quotes.objects.count() < len(quoteslines) or len(unshownQueryset) == 0):
+        import pdb; pdb.set_trace()
+        quotes.objects.all().delete()
+        for i in quoteslines:
+            a = quotes(q=i,shown= False )
+            a.save()
+    cur_quo_index = random.randint(0,len(unshownQueryset)-1)
+    a = unshownQueryset[cur_quo_index].q
+    unshownQueryset[cur_quo_index].shown =1
+    unshownQueryset[cur_quo_index].save()
     return render_to_response('index.html',locals(),context_instance = RequestContext(request))
 #}}}
 

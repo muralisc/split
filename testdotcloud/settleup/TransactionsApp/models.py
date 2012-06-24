@@ -4,7 +4,7 @@ from django import forms
 
 # Create your models here.
 
-class users(models.Model):
+class users(models.Model):#{{{
     name = models.CharField(max_length=10)
     username = models.CharField(max_length=10)
     password = models.CharField(max_length=50)
@@ -12,16 +12,23 @@ class users(models.Model):
 
     def __unicode__(self):
         return self.username
+        #}}}
 
-class transactions(models.Model):
+class transactions(models.Model):#{{{
     description = models.CharField(max_length=50)
     amount = models.FloatField()
     user_paid = models.ForeignKey(users,related_name='transactions_set')
     users_involved = models.ManyToManyField(users,related_name='transactions_set1')
     timestamp = models.DateTimeField(auto_now_add=True)
     perpersoncost = models.FloatField(null=True)
+        #}}}
 
-class transactionsForm(forms.ModelForm):
+class quotes(models.Model):      #{{{
+    q = models.CharField(max_length=1000)
+    shown = models.BooleanField()
+                                     #}}}
+
+class transactionsForm(forms.ModelForm):#{{{
     class Meta:
         model = transactions
         widgets = {
@@ -31,8 +38,9 @@ class transactionsForm(forms.ModelForm):
                 }
         exclude = ('perpersoncost',
                 )
+        #}}}
 
-class addUserForm(forms.ModelForm):
+class addUserForm(forms.ModelForm):#{{{
     class Meta:
         model = users
         exclude = ('outstanding',
@@ -40,3 +48,4 @@ class addUserForm(forms.ModelForm):
         widgets ={
                 'password': forms.PasswordInput(),
                 }
+        #}}}

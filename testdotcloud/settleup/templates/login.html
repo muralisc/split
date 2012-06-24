@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-<div class ="span-8 prepend-7">
-    <form name="adduserform" action="" method="get" class="uniForm" >
-        <div class="ctrlHolder">
-            <label id="font4">Username:</label>
-            <input class="textInput" type="text" name="username" />
-        </div>
-        <div class="ctrlHolder">
-            <p id="font4" class="label">Password:</p>
-            <input class="textInput" type="password" name="password" />
-        </div>
-        <div class="buttonHolder">
-        <input id="font4" type="submit" value="login" />
-        </div>
-    </form>
-    <a id="font4" href='adduser/'>Register new user</a>
+<div class="row-fluid">
+    <div class ="span3">
+        <ul class="nav nav-list">
+            <li>
+            <a id="font4" href='adduser/'><i class="icon-user"></i>Register new user</a>
+            </li>
+        </ul>
+    </div>
+    <div class ="span5">
+        <form name="adduserform" action="" method="get" class="well form-horizontal" >
+            <div class="control-group">
+                <label class="control-label" for="one">Username:</label>
+                <div class="controls">
+                    <input id="one" class="input" type="text" name="username" />
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Password:</label>
+                <div class="controls">
+                    <input class="input" type="password" name="password" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn" type="submit">Login</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

@@ -2,26 +2,35 @@
     <head>
         <meta http-equiv="content-type" content="text/html"; charset="utf-8">
         {% include "styles.html" %}
-        <title>{% block title%} {% endblock %}</title>
+        <title>{% block cur_title%} {% endblock %}</title>
 
-
-        <style type="text/css" media="screen">
-            body {
-                background-image: ;
-            }
-        </style>
 
 
         {% block current_head %}
         {% endblock %}
-
+        <link rel="stylesheet" media="screen" href="http://openfontlibrary.org/face/averia" rel="stylesheet" type="text/css"/>
+        <style media="screen" type="text/css">
+            #font3
+            {
+                font-family: 'Averia'; 
+                font-weight: bold; 
+                font-style: normal; 
+                font-size:60px;
+            }
+            body {
+                background-image:url(''); //http://bgrepeat.com/
+            }
+        </style>
 
     </head>
     <body>
-        <div class="container" >
+        <div class="container-fluid" >
             {% block header%}
-            <div class="prepend-6">
-                <h1 id="font2">App Name</h1> 
+            <div class="row-fluid">
+                <div class="span5"></div>
+                <div class="page-header">
+                    <h1 id="font3">PA-303</h1> 
+                </div>
             </div>
             {% endblock %}
 

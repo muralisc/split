@@ -4,13 +4,12 @@
 <script type="text/javascript">
     $(document).ready(function() {
             $('#mytable').fixheadertable({
-caption     : 'Table',
-colratio    : [30,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],
-whiteSpace  : 'normal',
-height      : 400,
-zebra       : true,
-sortable    : true,
-rowsPerPage : 10,
+                caption     : 'Table',
+                colratio    : [30,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],
+                whiteSpace  : 'normal',
+                height      : 400,
+                zebra       : true,
+                rowsPerPage : 10,
 });
             });
         </script>
@@ -18,47 +17,48 @@ rowsPerPage : 10,
 
 
 {% block content %}
-<div id="font2i" class="span-8">
-    Click on name</br>
-    <a href="/displayTransactions/all/">All Transactions</a></br>
-    {% for rows in ordered_userstable  %}
-    <a href="/displayTransactions/{{rows.username}}/">{{rows.username|add:""}}</a> --> {{rows.outstanding|floatformat}}</br>
-    {%endfor%}
-</div>
-<div class="span-15 last">
-    <a href="/deleteTransactions/-1/">Delete A Transaction</a></br>
-    <a href="/settleUP">SettleUP!!</a></br>
-</div>
-<div class="span-23">
-    <table id="mytable">
-        <thead>
-            <tr id="font4">
-                <th>id</th>
-                <th>description</th>
-                <th>amount</th>
-                <th>user paid</th>
-                <th>users involved</th>
-                <th>timestamp</th>
-
-                {% for i in userstable %}
-                <th>{{ i.username }}</th>
-                {% endfor  %}
-
-                {% for i in userstable %}
-                <th>Cumulative {{ i.username }}</th>
-                {% endfor  %}
-
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in newtable %}
-            <tr id="font4">
-                {% for j in i%}
-                <td>{{ j }}</td>
+<div class="row-fluid">
+    <div class="span2">
+        {% include "navlist.html" %}
+        <ul class="nav nav-list">
+            <li class="nav-header">Click on A name</li>
+            <li><a href="/displayTransactions/all/"><i class="icon-chevron-right"></i>All Transactions</a></li>
+            {% for rows in ordered_userstable  %}
+            <li><a href="/displayTransactions/{{rows.username}}/"><i class="icon-chevron-right"></i>{{rows.username|add:""}} --> {{rows.outstanding|floatformat}}</a></li>
+            {%endfor%}
+        </ul>
+   </div>
+    <div class="span10">
+        <table id="mytable">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>description</th>
+                    <th>amount</th>
+                    <th>user paid</th>
+                    <th>users involved</th>
+                    <th>timestamp</th>
+                    
+                    {% for i in userstable %}
+                    <th>{{ i.username }}</th>
+                    {% endfor  %}
+                    
+                    {% for i in userstable %}
+                    <th>Cumulative {{ i.username }}</th>
+                    {% endfor  %}
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in newtable %}
+                <tr id="font4">
+                    {% for j in i%}
+                    <td>{{ j }}</td>
+                    {% endfor%}
+                </tr>
                 {% endfor%}
-            </tr>
-            {% endfor%}
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
+</div
 {% endblock %}

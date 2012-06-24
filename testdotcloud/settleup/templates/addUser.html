@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="row-fluid">
+    <div class="span2">
+        {% include "navlist.html"%}
+    </div>
+    <div class="span2"></div>
+    <div class="span3">
         {% if userexist %}
         user already exist
         {% endif %}
-        <form class="span-10 " action="" method="post">
+        <form class="well" action="" method="post">
             {% csrf_token %}
             <table>
                 {{ form.as_table }}
             </table>
-            <input type="Submit" value = "Register"/>
+            <div class="form-actions">
+                <button class="btn" type="submit">login</button>
+            </div>
         </form>
+    </div>
+</div>
 {% endblock %}

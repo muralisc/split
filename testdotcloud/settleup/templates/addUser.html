@@ -2,20 +2,20 @@
 {% block content %}
 <div class="row-fluid">
     <div class="span2">
-        {% include "navlist.html"%}
+<ul class="nav nav-list">
+    <li><a id="" href='/'><i class="icon-share-alt"></i>Login</a></li>
+</ul>
     </div>
     <div class="span2"></div>
     <div class="span3">
-        {% if userexist %}
-        user already exist
-        {% endif %}
+        <h3>{{ adduser_msg }}</h3>
         <form class="well" action="" method="post">
             {% csrf_token %}
             <table>
                 {{ form.as_table }}
             </table>
             <div class="form-actions">
-                <button class="btn" type="submit">login</button>
+                <button class="btn" type="submit">add User</button>
             </div>
         </form>
     </div>

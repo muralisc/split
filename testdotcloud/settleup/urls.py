@@ -23,6 +23,7 @@ urlpatterns = patterns('',
     (r'^deleteUser/([-]?\d+)/$','settleup.TransactionsApp.views.deleteUser'),
     (r'^settleUP/$','settleup.TransactionsApp.views.settleUP'),
     (r'^fetchquote/$','settleup.TransactionsApp.views.fetchquote'),
+    (r'^logout/$','settleup.TransactionsApp.views.logout'),
 
     
 )

@@ -1,29 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row-fluid">
-    <div class ="span3">
+    <div class ="span2">
         <ul class="nav nav-list">
-            <li>
-            <a id="font4" href='adduser/'><i class="icon-user"></i>Register new user</a>
-            </li>
+            <li><a id="" href='/adduser/'><i class="icon-user"></i>Register new user</a></li>
         </ul>
     </div>
-    <div class ="span5">
-        <form name="adduserform" action="" method="post" class="well form-horizontal" >
-            <div class="control-group">
-                <label class="control-label" for="one">Username:</label>
-                <div class="controls">
-                    <input id="one" class="input" type="text" name="username" />
-                </div>
-            </div>
-            <div class="control-group">
-                <label class="control-label">Password:</label>
-                <div class="controls">
-                    <input class="input" type="password" name="password" />
-                </div>
-            </div>
+    <div class ="span2"></div>
+    <div class ="span3">
+        {{ login_msg }}
+        <form class="well" action="" method="post">
+            {% csrf_token %}
+            {{ form.as_table }}
             <div class="form-actions">
-                <button class="btn" type="submit">Login</button>
+                <button class="btn" type="submit">login</button>
             </div>
         </form>
     </div>

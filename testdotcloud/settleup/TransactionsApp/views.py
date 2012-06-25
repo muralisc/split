@@ -4,14 +4,36 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 #from TransactionsApp.forms import 
 from TransactionsApp.models import users,transactions,transactionsForm,addUserForm,quotes
+from TransactionsApp.forms import loginForm
 import urllib
 import pdb
 import re
 import random
 
-def login(request):
-    return render_to_response('login.html','',context_instance = RequestContext(request))
+def login(request):#{{{
+    if 'memid' in request.session:              #request.session.get('memid',False):
+        return redirect('/getTransaction')
+    if request.method == 'POST':
+        usrFromForm = loginForm(request.POST)
+        if usrFromForm.is_valid():
+            memberQuerySet = users.objects.filter(
+            username__exact = usrFromForm.cleaned_data['username']
+            ).filter(
+            password__exact = usrFromForm.cleaned_data['password'])
+            if memberQuerySet.count() == 0:
+                login_msg = "Invalid username or password"
+            else:
+                request.session['memid'] = memberQuerySet[0].name
+                return redirect('/getTransaction')
+    form = loginForm()
+    member_name = request.session['memid']
+    return render_to_response('login.html',locals(),context_instance = RequestContext(request))
+#}}}
 
+def logout(request):  #{{{
+    del request.session['memid']
+    return redirect('/')
+    #}}}
 
 #@csrf_exempt
 def adduser(request):                    #{{{
@@ -21,20 +43,21 @@ def adduser(request):                    #{{{
             if users.objects.filter(username__exact = form.cleaned_data['username']).count() == 0:
                 form.cleaned_data['outstanding']=0
                 form.save()
-                return redirect('/displayusers/')
+                adduser_msg = "YIPEE!! User added.Login to continue"
             else:
-                userexist = True
+                adduser_msg = "Username alredy exist. please chose a new one"
         else:
             pass
-    else:
-        form = addUserForm()
-
+    form = addUserForm()
+    member_name = request.session['memid']
     return render_to_response('addUser.html',locals(),context_instance = RequestContext(request))
                                          #}}}
 
-def displayusers(request):
+def displayusers(request):              #{{{
     dbrows = users.objects.all()
+    member_name = request.session['memid']
     return render_to_response('displayUser.html',locals(),context_instance = RequestContext(request))
+#}}}
 
 def getTransaction(request):     #{{{
     if request.method =='POST':
@@ -44,6 +67,7 @@ def getTransaction(request):     #{{{
             return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
+    member_name = request.session['memid']
     return render_to_response('transactionsGet.html',locals(),context_instance=RequestContext(request))
                                      #}}}
 
@@ -105,6 +129,7 @@ def displayDetailedTransactions(request,kind): #{{{
             usr_row.outstanding = newtable[len(newtable)-1][6+len(userstable)+i]
             usr_row.save()                                                  # update the user table with the latest values
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
+    member_name = request.session['memid']
     return render_to_response('displayDetailedTransactions.html',locals(),context_instance=RequestContext(request))
                                                    #}}}
 
@@ -113,8 +138,8 @@ def deleteTransactions(request,txn_id):#{{{
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.delete()
     all_txns = transactions.objects.all()
+    member_name = request.session['memid']
     return render_to_response('deleteTransaction.html',locals(),context_instance=RequestContext(request))#}}}
-
 
 def settleUP(request):  #{{{
     usr_details = users.objects.order_by('-outstanding')
@@ -143,6 +168,7 @@ def settleUP(request):  #{{{
             temp = settleUPlist[loc]
             settleUPlist[loc] = settleUPlist[j]
             settleUPlist[j] = temp
+    member_name = request.session['memid']
     return render_to_response('settleUP.html',locals(),context_instance=RequestContext(request))
                         #}}}
 
@@ -152,7 +178,6 @@ def fetchquote(request):#{{{
     quoteslines = re.split('#',data)
     unshownQueryset = quotes.objects.filter(shown=0)
     if (quotes.objects.count() < len(quoteslines) or len(unshownQueryset) == 0):
-        import pdb; pdb.set_trace()
         quotes.objects.all().delete()
         for i in quoteslines:
             a = quotes(q=i,shown= False )
@@ -161,6 +186,7 @@ def fetchquote(request):#{{{
     a = unshownQueryset[cur_quo_index].q
     unshownQueryset[cur_quo_index].shown =1
     unshownQueryset[cur_quo_index].save()
+    member_name = request.session['memid']
     return render_to_response('index.html',locals(),context_instance = RequestContext(request))
 #}}}
 
@@ -169,5 +195,8 @@ def deleteUser(request,usr_id):#{{{
         usrTOdelete = users.objects.get(id=usr_id)
         usrTOdelete.delete()
     all_usrs = users.objects.all()
+    member_name = request.session['memid']
     return render_to_response('deleteUser.html',locals(),context_instance=RequestContext(request))#}}}
-    #}}}
+#}}}
+
+

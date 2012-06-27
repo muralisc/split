@@ -23,7 +23,7 @@ MANAGERS = ADMINS
 if 'env' in locals():                                                                                                         # DEVELOPMENT
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+            'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
             'NAME': 'happydb',
             'USER': env['DOTCLOUD_DB_MYSQL_LOGIN'],
             'PASSWORD': env['DOTCLOUD_DB_MYSQL_PASSWORD'],
@@ -34,7 +34,7 @@ if 'env' in locals():                                                           
 else:                                                                                                                       # DEVELOPMENT
     DATABASES = {                                                                                                           # DEVELOPMENT
         'default': {                                                                                                        # DEVELOPMENT
-            'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.# DEVELOPMENT
+            'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.# DEVELOPMENT
             'NAME': 'settleupDB',                      # Or path to database file if using sqlite3.                         # DEVELOPMENT
             'USER': 'murali',                      # Not used with sqlite3.                                                 # DEVELOPMENT
             'PASSWORD': 'murali',                  # Not used with sqlite3.                                                 # DEVELOPMENT
@@ -146,6 +146,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'TransactionsApp',
+    'south',
 )
 
 # A sample logging configuration. The only tangible logging

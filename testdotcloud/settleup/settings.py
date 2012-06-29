@@ -35,7 +35,7 @@ else:                                                                           
     DATABASES = {                                                                                                           # DEVELOPMENT
         'default': {                                                                                                        # DEVELOPMENT
             'ENGINE': 'django.db.backends.mysql',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.# DEVELOPMENT
-            'NAME': 'settleupDB',                      # Or path to database file if using sqlite3.                         # DEVELOPMENT
+            'NAME': 'happydb',                      # Or path to database file if using sqlite3.                         # DEVELOPMENT
             'USER': 'murali',                      # Not used with sqlite3.                                                 # DEVELOPMENT
             'PASSWORD': 'murali',                  # Not used with sqlite3.                                                 # DEVELOPMENT
             'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.                    # DEVELOPMENT

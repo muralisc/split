@@ -185,6 +185,8 @@ def settleUP(request):  # {{{
 def fetchquote(request):  # {{{
 
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
+    data = unicode(data,"utf-8")
+    data = data.encode('utf-8')
     quoteslines = re.split('#', data)
     unshownQueryset = quotes.objects.filter(shown=0)
     if (quotes.objects.count() < len(quoteslines) or len(unshownQueryset) == 0):

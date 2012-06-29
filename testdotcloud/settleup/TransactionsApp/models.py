@@ -5,8 +5,8 @@ from django import forms
 
 
 class users(models.Model):    # {{{
-    name = models.CharField(max_length=10)
-    username = models.CharField(max_length=10)
+    name = models.CharField(max_length=50)
+    username = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     outstanding = models.FloatField(null=True)
 

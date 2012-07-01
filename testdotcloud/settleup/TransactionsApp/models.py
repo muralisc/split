@@ -41,4 +41,5 @@ class PostsTable(models.Model):   # {{{
     timestamp = models.DateTimeField(auto_now_add=True)
     audience = models.ManyToManyField(users, related_name='PostsTable_audience_set')
     linkToTransaction = models.ForeignKey(transactions, blank=True, null=True)
+    PostType = models.CharField(max_length=10)
     # }}}

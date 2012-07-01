@@ -24,7 +24,9 @@ class transactionsForm(forms.ModelForm):   # {{{
 class addUserForm(forms.ModelForm):  # {{{
     class Meta:
         model = users
-        exclude = ('outstanding',
+        exclude = (
+                'outstanding',
+                'lastPostView',
                 )
         widgets = {
                 'password': forms.PasswordInput(),

@@ -7,6 +7,7 @@ from TransactionsApp.models import users, transactions, quotes, PostsTable
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm
 import urllib
 import re
+import datetime
 import random
 
 
@@ -68,7 +69,7 @@ def getTransaction(request):     # {{{
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
-            form.save()
+            transactionsObj = form.save()
             postObject = PostsTable(
                             author=users.objects.get(name=member_name),
                             desc='added transaction',
@@ -76,6 +77,9 @@ def getTransaction(request):     # {{{
                             PostType='noti',
                                     )
             postObject.save()
+            for usr in (transactionsObj.users_involved.all()):
+                postObject.audience.add(usr)                     # should be added like this cause it need a primary id for ManyToManyField
+            postObject.audience.add(transactionsObj.user_paid)
             return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
@@ -160,6 +164,9 @@ def deleteTransactions(request, txn_id):    # {{{
                         PostType='noti',
                                 )
         postObject.save()
+        for usr in (txnTOdelete.users_involved.all()):  # should be added like this cause it need a primary id for ManyToManyField
+            postObject.audience.add(usr)
+        postObject.audience.add(txnTOdelete.user_paid)
         return redirect('/deleteTransactions/-1/')
     all_txns = transactions.objects.filter(deleted__exact=False)
     return render_to_response('deleteTransaction.html', locals(), context_instance=RequestContext(request))
@@ -230,11 +237,21 @@ def deleteUser(request, usr_id):  # {{{
 
 class PostsTableNotiListView(ListView):
     def get_queryset(self):
+        usr = users.objects.get(name=self.request.session['memid'])
+        lsttime = usr.lastPostView
+        usr.lastPostView = datetime.datetime.now()
+        usr.save()
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
-                                                '-timestamp'
-                                      ).filter(
-                                                PostType__exact='noti')
+                                              '-timestamp'
+                                              ).filter(
+                                              PostType__exact='noti')
+        elif(self.args[0] == 'new'):
+            return PostsTable.objects.filter(
+                                            timestamp__gte=lsttime
+                                            ).filter(
+                                            PostType__exact='noti'
+                                            ).order_by('-timestamp')
 
 
 class PostsTablePostListView(ListView):

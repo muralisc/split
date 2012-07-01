@@ -8,7 +8,7 @@ class users(models.Model):    # {{{
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     outstanding = models.FloatField(null=True)
-    lastPostView = models.DateTimeField(auto_now=True)
+    lastPostView = models.DateTimeField()
 
     def __unicode__(self):
         return self.name

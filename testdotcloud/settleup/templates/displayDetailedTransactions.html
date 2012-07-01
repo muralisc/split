@@ -5,14 +5,20 @@
     $(document).ready(function() {
             $('#mytable').fixheadertable({
                 caption     : 'Table',
-                colratio    : [30,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],
                 whiteSpace  : 'normal',
                 height      : 400,
+                width       : 1000,
+                minWidthAuto: true,
+                addTitles   : true,
                 zebra       : true,
                 rowsPerPage : 10,
 });
             });
         </script>
+ <!-- http://www.tablefixedheader.com/fullpagedemo/ -->
+ <script type="text/javascript" src="{{ STATIC_URL }}fixheadertable/javascript/jquery.fixheadertable.js"></script> 
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/css/base.css" />
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/jquery-ui/css/ui-lightness/jquery-ui-1.8.4.custom.css" />
 {% endblock %}
 
 

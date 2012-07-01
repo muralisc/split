@@ -1,5 +1,4 @@
 from django.db import models
-from django import forms
 
 # Create your models here.
 
@@ -9,9 +8,10 @@ class users(models.Model):    # {{{
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     outstanding = models.FloatField(null=True)
+    lastPostView = models.DateTimeField(auto_now=True)
 
     def __unicode__(self):
-        return self.username
+        return self.name
         #}}}
 
 
@@ -22,6 +22,10 @@ class transactions(models.Model):   # {{{
     users_involved = models.ManyToManyField(users, related_name='transactions_set1')
     timestamp = models.DateTimeField(auto_now_add=True)
     perpersoncost = models.FloatField(null=True)
+    deleted = models.BooleanField(null=False)
+
+    def __unicode__(self):
+        return str(self.id)
         #}}}
 
 
@@ -31,25 +35,10 @@ class quotes(models.Model):      # {{{
                                      #}}}
 
 
-class transactionsForm(forms.ModelForm):   # {{{
-    class Meta:
-        model = transactions
-        widgets = {
-                'description': forms.Textarea(attrs={'class': 'textInput'}),
-                'amount': forms.TextInput(attrs={'class': 'textInput'}),
-                'users_involved': forms.CheckboxSelectMultiple(),
-                }
-        exclude = ('perpersoncost',
-                )
-        #}}}
-
-
-class addUserForm(forms.ModelForm):  # {{{
-    class Meta:
-        model = users
-        exclude = ('outstanding',
-                )
-        widgets = {
-                'password': forms.PasswordInput(),
-                }
-        #}}}
+class PostsTable(models.Model):   # {{{
+    author = models.ForeignKey(users, related_name='PostsTable_author_set')
+    desc = models.CharField(max_length=150)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    audience = models.ManyToManyField(users, related_name='PostsTable_audience_set')
+    linkToTransaction = models.ForeignKey(transactions, blank=True, null=True)
+    # }}}

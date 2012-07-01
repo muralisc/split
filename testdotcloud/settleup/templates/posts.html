@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-fluid">
+<div class="span2">
+    {% include "navlist.html" %}
+</div>
+<div class="span10">
+        <table class="table table-striped">
+        {% for row in object_list %}
+        <tr>
+            <td>
+            <b>{{ row.author }}</b>
+            {{ row.desc }}->
+            {{ row.linkToTransaction.amount }} paid by 
+            <b>{{ row.linkToTransaction.user_paid }} </b>for
+            {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+            </b> 
+            </td>
+            <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+</div>
+{% endblock %}

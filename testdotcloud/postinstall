@@ -1,6 +1,7 @@
 #!/bin/sh
 python createdb.py
 python settleup/manage.py schemamigration myapp --auto
+python settleup/manage.py migrate --list
 python settleup/manage.py migrate
 python mkadmin.py
 mkdir -p /home/dotcloud/data/media /home/dotcloud/volatile/static

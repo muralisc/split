@@ -1,10 +1,11 @@
 # Create your views here.
 from django.shortcuts import render_to_response, redirect
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import ListView
 from django.template import RequestContext
 #from TransactionsApp.forms import
-from TransactionsApp.models import users, transactions, transactionsForm, addUserForm, quotes
-from TransactionsApp.forms import loginForm
+from TransactionsApp.models import users, transactions, quotes, PostsTable
+from TransactionsApp.forms import loginForm, transactionsForm, addUserForm
 import urllib
 import re
 import random
@@ -65,25 +66,31 @@ def displayusers(request):              # {{{
 
 
 def getTransaction(request):     # {{{
+    member_name = request.session['memid']
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
             form.save()
+            postObject = PostsTable(
+                            author=users.objects.get(name=member_name),
+                            desc='added transaction',
+                            linkToTransaction=transactions.objects.latest('timestamp')
+                                    )
+            postObject.save()
             return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
-    member_name = request.session['memid']
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
 
 
 def displayDetailedTransactions(request, kind):   # {{{
     userstable = users.objects.all()
-    txnstable = transactions.objects.all()
+    txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
     for i in userstable:
         rows.update({i.username: 0})                                     # make the sample row dict for table
-    table = [dict(rows) for k in range(transactions.objects.count())]
+    table = [dict(rows) for k in range(txnstable.count())]
     i = 0
     for i, curtxn in enumerate(txnstable):                               # fetch each database row
         if i == 0:
@@ -141,11 +148,19 @@ def displayDetailedTransactions(request, kind):   # {{{
 
 
 def deleteTransactions(request, txn_id):    # {{{
+    member_name = request.session['memid']
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
-        txnTOdelete.delete()
-    all_txns = transactions.objects.all()
-    member_name = request.session['memid']
+        txnTOdelete.deleted = True
+        txnTOdelete.save()
+        postObject = PostsTable(
+                        author=users.objects.get(name=member_name),
+                        desc='deleted transaction',
+                        linkToTransaction=transactions.objects.get(id=txn_id)
+                                )
+        postObject.save()
+        return redirect('/deleteTransactions/-1/')
+    all_txns = transactions.objects.filter(deleted__exact=False)
     return render_to_response('deleteTransaction.html', locals(), context_instance=RequestContext(request))
         # }}}
 
@@ -185,7 +200,7 @@ def settleUP(request):  # {{{
 def fetchquote(request):  # {{{
 
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
-    data = unicode(data,"utf-8")
+    data = unicode(data, "utf-8")
     data = data.encode('utf-8')
     quoteslines = re.split('#', data)
     unshownQueryset = quotes.objects.filter(shown=0)
@@ -209,4 +224,10 @@ def deleteUser(request, usr_id):  # {{{
     all_usrs = users.objects.all()
     member_name = request.session['memid']
     return render_to_response('deleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
-#}}}
+    #}}}
+
+
+class PostsTableListView(ListView):
+    def get_queryset(self):
+        if(self.args[0] == 'all'):
+            return PostsTable.objects.order_by('-timestamp').all()

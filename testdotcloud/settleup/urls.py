@@ -1,4 +1,6 @@
 from django.conf.urls.defaults import patterns, include, url
+from TransactionsApp.views import PostsTableListView
+
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -14,16 +16,16 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
      url(r'^admin/', include(admin.site.urls)),
-    (r'^$','settleup.TransactionsApp.views.login'),
-    (r'^adduser/$','settleup.TransactionsApp.views.adduser'),
-    (r'^displayusers/$','settleup.TransactionsApp.views.displayusers'),
-    (r'^getTransaction/$','settleup.TransactionsApp.views.getTransaction'),
-    (r'^displayTransactions/(\w+)/$','settleup.TransactionsApp.views.displayDetailedTransactions'),
-    (r'^deleteTransactions/([-]?\d+)/$','settleup.TransactionsApp.views.deleteTransactions'),
-    (r'^deleteUser/([-]?\d+)/$','settleup.TransactionsApp.views.deleteUser'),
-    (r'^settleUP/$','settleup.TransactionsApp.views.settleUP'),
-    (r'^fetchquote/$','settleup.TransactionsApp.views.fetchquote'),
-    (r'^logout/$','settleup.TransactionsApp.views.logout'),
+    (r'^$', 'settleup.TransactionsApp.views.login'),
+    (r'^adduser/$', 'settleup.TransactionsApp.views.adduser'),
+    (r'^displayusers/$', 'settleup.TransactionsApp.views.displayusers'),
+    (r'^getTransaction/$', 'settleup.TransactionsApp.views.getTransaction'),
+    (r'^displayTransactions/(\w+)/$', 'settleup.TransactionsApp.views.displayDetailedTransactions'),
+    (r'^deleteTransactions/([-]?\d+)/$', 'settleup.TransactionsApp.views.deleteTransactions'),
+    (r'^deleteUser/([-]?\d+)/$', 'settleup.TransactionsApp.views.deleteUser'),
+    (r'^settleUP/$', 'settleup.TransactionsApp.views.settleUP'),
+    (r'^fetchquote/$', 'settleup.TransactionsApp.views.fetchquote'),
+    (r'^logout/$', 'settleup.TransactionsApp.views.logout'),
+    (r'^posts/(\w+)/$', PostsTableListView.as_view(template_name="posts.html")),
 
-    
 )

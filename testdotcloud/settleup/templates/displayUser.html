@@ -8,14 +8,18 @@
         <table class="table">
             <thead>
             <tr>
+                <th>name</th>
                 <th>username</th>
                 <th>outstanding</th>
+                <th>lastPostView</th>
             </tr>
         </thead>
             {% for row in dbrows %}
             <tr>
+                <td>{{ row.name }}</td>
                 <td>{{ row.username }}</td>
                 <td>{{ row.outstanding  }}</td>
+                <td>{{ row.lastPostView  }}</td>
             </tr>
             {% endfor%}
         </table>

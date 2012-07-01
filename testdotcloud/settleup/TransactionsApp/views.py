@@ -1,11 +1,10 @@
 # Create your views here.
 from django.shortcuts import render_to_response, redirect
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView
 from django.template import RequestContext
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
-from TransactionsApp.forms import loginForm, transactionsForm, addUserForm
+from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm
 import urllib
 import re
 import random
@@ -40,7 +39,6 @@ def logout(request):  # {{{
     #}}}
 
 
-@csrf_exempt
 def adduser(request):                    # {{{
     if request.method == 'POST':
         form = addUserForm(request.POST)
@@ -74,7 +72,8 @@ def getTransaction(request):     # {{{
             postObject = PostsTable(
                             author=users.objects.get(name=member_name),
                             desc='added transaction',
-                            linkToTransaction=transactions.objects.latest('timestamp')
+                            linkToTransaction=transactions.objects.latest('timestamp'),
+                            PostType='noti',
                                     )
             postObject.save()
             return redirect('/displayTransactions/all/')
@@ -143,6 +142,7 @@ def displayDetailedTransactions(request, kind):   # {{{
             usr_row.save()                                                  # update the user table with the latest values
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
     member_name = request.session['memid']
+    newtable.reverse()
     return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
                                                    #}}}
 
@@ -156,7 +156,8 @@ def deleteTransactions(request, txn_id):    # {{{
         postObject = PostsTable(
                         author=users.objects.get(name=member_name),
                         desc='deleted transaction',
-                        linkToTransaction=transactions.objects.get(id=txn_id)
+                        linkToTransaction=transactions.objects.get(id=txn_id),
+                        PostType='noti',
                                 )
         postObject.save()
         return redirect('/deleteTransactions/-1/')
@@ -227,7 +228,34 @@ def deleteUser(request, usr_id):  # {{{
     #}}}
 
 
-class PostsTableListView(ListView):
+class PostsTableNotiListView(ListView):
     def get_queryset(self):
         if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by('-timestamp').all()
+            return PostsTable.objects.order_by(
+                                                '-timestamp'
+                                      ).filter(
+                                                PostType__exact='noti')
+
+
+class PostsTablePostListView(ListView):
+    def get_queryset(self):
+        if(self.args[0] == 'all'):
+            return PostsTable.objects.order_by('-timestamp').filter(PostType__exact='post')
+
+
+def Putpost(request):
+    member_name = request.session['memid']
+    if request.method == 'POST':
+        form = PostsForm(request.POST)
+        if form.is_valid():
+            # we need to add the user data so we save the form without commit
+            # so we get the obj to manipulate
+            # http://stackoverflow.com/questions/7715263/whats-the-cleanest-way-to-add-arbitrary-data-to-modelform
+            PostsTableObj = form.save(commit=False)
+            PostsTableObj.author = users.objects.get(name=member_name)
+            PostsTableObj.PostType = 'post'
+            PostsTableObj.save()
+            return redirect('/posts/all/')
+    else:
+        form = PostsForm()
+    return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))

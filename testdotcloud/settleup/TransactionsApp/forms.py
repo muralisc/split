@@ -1,5 +1,5 @@
 from django import forms
-from TransactionsApp.models import transactions, users
+from TransactionsApp.models import transactions, users, PostsTable
 
 
 class loginForm(forms.Form):
@@ -30,3 +30,23 @@ class addUserForm(forms.ModelForm):  # {{{
                 'password': forms.PasswordInput(),
                 }
         #}}}
+
+
+class PostsForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(PostsForm, self).__init__(*args, **kwargs)
+        # change a widget attribute:
+        self.fields['audience'].label = 'Visible for'
+
+    class Meta:
+        model = PostsTable
+        widgets = {
+                'desc': forms.Textarea(attrs={'class': 'textInput'}),
+                'audience': forms.CheckboxSelectMultiple(),
+                }
+        exclude = (
+                   'author',
+                   'timestamp',
+                   'linkToTransaction',
+                   'PostType',
+                )

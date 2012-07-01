@@ -9,8 +9,12 @@
         {% for row in object_list %}
         <tr>
             <td>
-            <b>{{ row.author }}</b> posted
-            {{ row.desc }}
+            <b>{{ row.author }}</b>
+            {{ row.desc }}->
+            {{ row.linkToTransaction.amount }} paid by 
+            <b>{{ row.linkToTransaction.user_paid }} </b>for
+            {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+            </b> 
             </td>
             <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
         </tr>

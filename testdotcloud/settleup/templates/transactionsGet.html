@@ -8,7 +8,7 @@
         <div class="span1"></div>
         <div class="span8">
             {% ifnotequal  noOfNewNoti 0 %}
-            <a href="/posts/all/"> {{ noOfNewNoti }} new transactiosn involving you</a>
+            <a href="/posts/all/"> {{ noOfNewNoti }} new transaction added involving you</a>
             {% endifnotequal %}
             <form action="" method="post" class="well form-horizontal">
                {% csrf_token %}

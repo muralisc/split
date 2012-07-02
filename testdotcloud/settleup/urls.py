@@ -7,15 +7,6 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'settleup.views.home', name='home'),
-    # url(r'^settleup/', include('SettleUp.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-     url(r'^admin/', include(admin.site.urls)),
     (r'^$', 'settleup.TransactionsApp.views.login'),
     (r'^adduser/$', 'settleup.TransactionsApp.views.adduser'),
     (r'^displayusers/$', 'settleup.TransactionsApp.views.displayusers'),

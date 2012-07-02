@@ -13,7 +13,7 @@ case "$1" in
 	mysql)
 		FILENAME="$TAG.sql.gz"
 		FILEPATH="/tmp/$FILENAME"
-		mysqldump --all-databases | gzip > "$FILEPATH"
+		mysqldump happydb | gzip > "$FILEPATH"
 		;;
 	pgsql)
 		FILENAME="$TAG.sql.gz"

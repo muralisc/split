@@ -11,7 +11,7 @@ class users(models.Model):    # {{{
     lastNotiView = models.DateTimeField()
 
     def __unicode__(self):
-        return self.name
+        return self.username
         #}}}
 
 

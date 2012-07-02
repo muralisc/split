@@ -46,7 +46,10 @@ def adduser(request):                    # {{{
         if form.is_valid():
             if users.objects.filter(username__exact=form.cleaned_data['username']).count() == 0:
                 form.cleaned_data['outstanding'] = 0
-                form.save()
+                usr = form.save(commit=False)
+                usr.outstanding = 0
+                usr.lastNotiView = datetime.datetime.now()
+                usr.save()
                 adduser_msg = "YIPEE!! User added.Login to continue"
             else:
                 adduser_msg = "Username alredy exist. please chose a new one"
@@ -65,8 +68,9 @@ def displayusers(request):              # {{{
 
 
 def getTransaction(request):     # {{{
-    member_name = request.session['memid']
+    member_name = ''
     if request.method == 'POST':
+        member_name = request.session['memid']
         form = transactionsForm(request.POST)
         if form.is_valid():
             transactionsObj = form.save()
@@ -83,13 +87,17 @@ def getTransaction(request):     # {{{
             return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
-    noOfNewNoti = PostsTable.objects.filter(
-                                            timestamp__gte=users.objects.get(name=request.session['memid']).lastNotiView
-                                            ).filter(
-                                            PostType__exact='noti'
-                                            ).filter(
-                                            audience__in=[users.objects.get(name=request.session['memid']).id]
-                                            ).order_by('-timestamp').count()
+        member_name = request.session['memid']
+    try:
+        noOfNewNoti = PostsTable.objects.filter(
+                                                timestamp__gte=users.objects.get(name=request.session['memid']).lastNotiView
+                                                ).filter(
+                                                PostType__exact='noti'
+                                                ).filter(
+                                                audience__in=[users.objects.get(name=request.session['memid']).id]
+                                                ).order_by('-timestamp').count()
+    except:
+        noOfNewNoti = 0
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
 

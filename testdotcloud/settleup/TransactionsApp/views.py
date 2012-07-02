@@ -83,6 +83,13 @@ def getTransaction(request):     # {{{
             return redirect('/displayTransactions/all/')
     else:
         form = transactionsForm()
+    noOfNewNoti = PostsTable.objects.filter(
+                                            timestamp__gte=users.objects.get(name=request.session['memid']).lastNotiView
+                                            ).filter(
+                                            PostType__exact='noti'
+                                            ).filter(
+                                            audience__in=[users.objects.get(name=request.session['memid']).id]
+                                            ).order_by('-timestamp').count()
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
 
@@ -237,21 +244,28 @@ def deleteUser(request, usr_id):  # {{{
 
 class PostsTableNotiListView(ListView):
     def get_queryset(self):
-        usr = users.objects.get(name=self.request.session['memid'])
-        lsttime = usr.lastPostView
-        usr.lastPostView = datetime.datetime.now()
-        usr.save()
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                               '-timestamp'
                                               ).filter(
                                               PostType__exact='noti')
-        elif(self.args[0] == 'new'):
-            return PostsTable.objects.filter(
-                                            timestamp__gte=lsttime
-                                            ).filter(
-                                            PostType__exact='noti'
-                                            ).order_by('-timestamp')
+
+    def get_context_data(self, **kwargs):
+        usr = users.objects.get(name=self.request.session['memid'])
+        lsttime = usr.lastNotiView
+        usr.lastNotiView = datetime.datetime.now()
+        usr.save()
+        context = super(PostsTableNotiListView, self).get_context_data(**kwargs)
+        context['object_list_new'] = PostsTable.objects.filter(
+                                                    timestamp__gte=lsttime
+                                                    ).filter(
+                                                    PostType__exact='noti'
+                                                    ).filter(
+                                                    audience__in=[usr.id]
+                                                    ).order_by('-timestamp')
+        context['noOfNewNoti'] = len(context['object_list_new'])
+        context['member_name'] = usr.name
+        return context
 
 
 class PostsTablePostListView(ListView):

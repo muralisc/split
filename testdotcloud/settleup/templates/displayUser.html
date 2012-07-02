@@ -11,7 +11,7 @@
                 <th>name</th>
                 <th>username</th>
                 <th>outstanding</th>
-                <th>lastPostView</th>
+                <th>lastNotiView</th>
             </tr>
         </thead>
             {% for row in dbrows %}
@@ -19,7 +19,7 @@
                 <td>{{ row.name }}</td>
                 <td>{{ row.username }}</td>
                 <td>{{ row.outstanding  }}</td>
-                <td>{{ row.lastPostView  }}</td>
+                <td>{{ row.lastNotiView  }}</td>
             </tr>
             {% endfor%}
         </table>

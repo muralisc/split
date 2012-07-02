@@ -26,7 +26,7 @@ class addUserForm(forms.ModelForm):  # {{{
         model = users
         exclude = (
                 'outstanding',
-                'lastPostView',
+                'lastNotiView',
                 )
         widgets = {
                 'password': forms.PasswordInput(),

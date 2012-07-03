@@ -2,10 +2,12 @@
 from django.shortcuts import render_to_response, redirect
 from django.views.generic import ListView
 from django.template import RequestContext
+from django.http import HttpResponse
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm
 import urllib
+import csv
 import re
 import datetime
 import random
@@ -161,6 +163,7 @@ def displayDetailedTransactions(request, kind):   # {{{
             usr_row.save()                                                  # update the user table with the latest values
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
     member_name = request.session['memid']
+    request.session['downloadData'] = list(newtable)
     newtable.reverse()
     return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
                                                    #}}}
@@ -282,6 +285,7 @@ class PostsTablePostListView(ListView):
             return PostsTable.objects.order_by('-timestamp').filter(PostType__exact='post')
 
 
+# TODO consolidate the database
 def Putpost(request):
     member_name = request.session['memid']
     if request.method == 'POST':
@@ -298,3 +302,20 @@ def Putpost(request):
     else:
         form = PostsForm()
     return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
+
+
+def downloadAsCsv(request):
+    if 'downloadData' in request.session:
+        # Create the HttpResponse object with the appropriate CSV header.
+        response = HttpResponse(mimetype='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=somefilename.csv'
+        newtable = request.session['downloadData']
+        del request.session['downloadData']
+        userstable = list(users.objects.all())
+        writer = csv.writer(response)
+        writer.writerow(["id","DESCRIPTION","AMOUNT","PAID BY","PAID FOR","TIME"]+userstable+userstable)
+        for i in range(len(newtable)):
+            writer.writerow(newtable[i])
+        return response
+    else:
+        return redirect('/displayTransactions/all/')

@@ -1,4 +1,92 @@
 {% extends "base.html" %}
+{% block current_head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+            $('#id_amount').before("<div id='calcu'></div>")
+            $('#id_amount').blur(function() {
+                var nos = $('#id_amount').val();
+                var arr = nos.match(/\d+/g);
+                var opr = nos.match(/[*+/-]/g);
+                if(arr[1])
+                {
+                if(opr[0]=='+')
+                { 
+                    a = parseFloat(arr[0]);
+                    b = parseFloat(arr[1]);
+                    c = a+b;
+                    $(this).val(c); 
+                }
+                else if(opr[0]=='-')
+                { 
+                    a = parseFloat(arr[0]);
+                    b = parseFloat(arr[1]);
+                    c = a-b;
+                    $(this).val(c); 
+                }
+                else if(opr[0]=='/')
+                { 
+                    a = parseFloat(arr[0]);
+                    b = parseFloat(arr[1]);
+                    c = a/b;
+                    $(this).val(c); 
+                }
+                else if(opr[0]=='*')
+                { 
+                    a = parseFloat(arr[0]);
+                    b = parseFloat(arr[1]);
+                    c = a*b;
+                    $(this).val(c); 
+                }
+                }
+                else
+                {  
+                    $(this).val(arr[0]);
+                    $('#calcu').text(arr[0]);  
+                }
+            });
+            $('#id_amount').keyup(function() {
+                var nos = $('#id_amount').val();
+                var arr = nos.match(/\d+/g);
+                var opr = nos.match(/[*+/-]/g);
+                if(opr[1])
+                {
+                    if(opr[0]=='+')
+                    { 
+                        a = parseFloat(arr[0]);
+                        b = parseFloat(arr[1]);
+                        c = a+b;
+                        $(this).val(c+opr[1]); 
+                    }
+                    else if(opr[0]=='-')
+                    { 
+                        a = parseFloat(arr[0]);
+                        b = parseFloat(arr[1]);
+                        c = a-b;
+                        $(this).val(c+opr[1]); 
+                    }
+                    else if(opr[0]=='/')
+                    { 
+                        a = parseFloat(arr[0]);
+                        b = parseFloat(arr[1]);
+                        c = a/b;
+                        $(this).val(c+opr[1]); 
+                    }
+                    else if(opr[0]=='*')
+                    { 
+                        a = parseFloat(arr[0]);
+                        b = parseFloat(arr[1]);
+                        c = a*b;
+                        $(this).val(c+opr[1]); 
+                    }
+                }
+                if(arr[1])
+                {  $('#calcu').text(arr[0]+opr[0]+arr[1]); }
+                else
+                {  $('#calcu').text(arr[0]);  }
+                });       
+            });
+</script>
+{% endblock %}
 {% block content %}
 <div class="row-fluid">
     <div class="span2">
@@ -6,7 +94,7 @@
     </div>
     <div class="span10">
         <div class="span1"></div>
-        <div class="span5">
+        <div class="span8">
             {% ifnotequal  noOfNewNoti 0 %}
             <a href="/posts/all/"> {{ noOfNewNoti }} new transaction added involving you</a>
             {% endifnotequal %}
@@ -29,11 +117,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-        <div class="span3">
-            <iframe width="300" height="300" src="http://web2.0calc.com/widgets/minimal/" scrolling="no" style="border: 1px solid #silver; "> 
-            </iframe>
-            <br />
         </div>
     </div>
 </div>

@@ -2,92 +2,28 @@
 {% block current_head %}
 <script type="text/javascript">
     $(document).ready(function() {
-            $('#id_amount').before("<div id='calcu'></div>")
             $('#id_amount').attr('autocomplete','off');
+            $('#id_amount').focus(function() {
+                $('#id_amount').before("<div id='calcu'></div>")
+                });       
             $('#id_amount').blur(function() {
                 var nos = $('#id_amount').val();
-                var arr = nos.match(/\d+/g);
-                var opr = nos.match(/[*+/-]/g);
-                if(arr[1])
-                {
-                if(opr[0]=='+')
-                { 
-                    a = parseFloat(arr[0]);
-                    b = parseFloat(arr[1]);
-                    c = a+b;
-                    $(this).val(c); 
-                }
-                else if(opr[0]=='-')
-                { 
-                    a = parseFloat(arr[0]);
-                    b = parseFloat(arr[1]);
-                    c = a-b;
-                    $(this).val(c); 
-                }
-                else if(opr[0]=='/')
-                { 
-                    a = parseFloat(arr[0]);
-                    b = parseFloat(arr[1]);
-                    c = a/b;
-                    $(this).val(c); 
-                }
-                else if(opr[0]=='*')
-                { 
-                    a = parseFloat(arr[0]);
-                    b = parseFloat(arr[1]);
-                    c = a*b;
-                    $(this).val(c); 
-                }
-                }
-                else
-                {  
-                   $(this).val(arr[0]);
-                    $('#calcu').text(arr[0]);  
-                }
-            });
+                $.get('/calculator/'+nos+'/',function(data)
+                    {
+                    $('#calcu').remove();
+                    $('#id_amount').val(data);
+                    });
+                });       
             $('#id_amount').keyup(function() {
                 var nos = $('#id_amount').val();
-                var arr = nos.match(/\d+/g);
-                var opr = nos.match(/[*+/-]/g);
-                $('#calcu').text(arr[0]);
-                if(opr[1])
-                {
-                    if(opr[0]=='+')
-                    { 
-                        a = parseFloat(arr[0]);
-                        b = parseFloat(arr[1]);
-                        c = a+b;
-                        $(this).val(c+opr[1]); 
-                    }
-                    else if(opr[0]=='-')
-                    { 
-                        a = parseFloat(arr[0]);
-                        b = parseFloat(arr[1]);
-                        c = a-b;
-                        $(this).val(c+opr[1]); 
-                    }
-                    else if(opr[0]=='/')
-                    { 
-                        a = parseFloat(arr[0]);
-                        b = parseFloat(arr[1]);
-                        c = a/b;
-                        $(this).val(c+opr[1]); 
-                    }
-                    else if(opr[0]=='*')
-                    { 
-                        a = parseFloat(arr[0]);
-                        b = parseFloat(arr[1]);
-                        c = a*b;
-                        $(this).val(c+opr[1]); 
-                    }
-                    else
-                    { ; }
-                }
-                else if(arr[1])
-                {  $('#calcu').text(arr[0]+opr[0]+arr[1]); }
-                else
-                { ; }
+                $.get('/calculator/'+nos+'/',function(data)
+                    {
+                    $('#calcu').text(data);
+                    });
                 });       
+            $('#id_amount').keydown(function() {
+                    $('#calcu').text('some packets forgot their way here ;)');
+                    });
             });
 </script>
 {% endblock %}

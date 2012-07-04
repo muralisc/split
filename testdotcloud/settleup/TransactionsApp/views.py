@@ -350,3 +350,13 @@ def downloadAsCsv(request):
         return response
     else:
         return redirect('/displayTransactions/all/')
+
+
+def calculator(request, exp):
+    response = urllib.urlopen('http://www.google.com/ig/calculator?q=' + urllib.quote(exp))
+    html = response.read()
+    error = re.findall(r'error: "(.*?)"', html)
+    result = re.findall(r'rhs: "([\d.]+)"', html)
+    if error != [""] and error != ['0']:
+        result = error
+    return HttpResponse(result)

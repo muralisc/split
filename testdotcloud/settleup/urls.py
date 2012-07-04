@@ -21,5 +21,6 @@ urlpatterns = patterns('',
     (r'^showposts/(\w+)/$', PostsTablePostListView.as_view(template_name="posts.html")),
     (r'^getposts/$', 'settleup.TransactionsApp.views.Putpost'),
     (r'^download/$', 'settleup.TransactionsApp.views.downloadAsCsv'),
+    (r'^calculator/(.*)/$', 'settleup.TransactionsApp.views.calculator'),
 
 )

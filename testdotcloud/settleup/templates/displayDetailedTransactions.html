@@ -11,6 +11,7 @@
                 minWidthAuto: true,
                 addTitles   : true,
                 zebra       : true,
+                sortable    : true,
                 rowsPerPage : 10,
 });
             });
@@ -45,15 +46,18 @@
                     <th>user paid</th>
                     <th>users involved</th>
                     <th>timestamp</th>
-                    
-                    {% for i in userstable %}
-                    <th>{{ i.username }}</th>
-                    {% endfor  %}
-                    
-                    {% for i in userstable %}
-                    <th>Cumulative {{ i.username }}</th>
-                    {% endfor  %}
-                    
+                    {% if not userpos %}
+                        {% for i in userstable %}
+                        <th>{{ i.username }}</th>
+                        {% endfor  %}
+                        
+                        {% for i in userstable %}
+                        <th>Cumulative {{ i.username }}</th>
+                        {% endfor  %}
+                    {% else %}
+                        <th>{{ kind }}</th>
+                        <th>Cumulative {{ kind }}</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>

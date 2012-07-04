@@ -30,6 +30,7 @@ def login(request):  # {{{
                 login_msg = "Invalid username or password"
             else:
                 request.session['memid'] = memberQuerySet[0].name
+                request.session['memUsername'] = memberQuerySet[0].username
                 return redirect('/getTransaction')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
@@ -43,6 +44,10 @@ def logout(request):  # {{{
 
 
 def adduser(request):                    # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
@@ -63,16 +68,21 @@ def adduser(request):                    # {{{
 
 
 def displayusers(request):              # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     dbrows = users.objects.all()
-    member_name = request.session['memid']
     return render_to_response('displayUser.html', locals(), context_instance=RequestContext(request))
     #}}}
 
 
 def getTransaction(request):     # {{{
-    member_name = ''
-    if request.method == 'POST':
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
         member_name = request.session['memid']
+    if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
             transactionsObj = form.save()
@@ -86,10 +96,9 @@ def getTransaction(request):     # {{{
             for usr in (transactionsObj.users_involved.all()):
                 postObject.audience.add(usr)                     # should be added like this cause it need a primary id for ManyToManyField
             postObject.audience.add(transactionsObj.user_paid)
-            return redirect('/displayTransactions/all/')
+            return redirect('/displayTransactions/' + postObject.author.username + '/')
     else:
         form = transactionsForm()
-        member_name = request.session['memid']
     try:
         noOfNewNoti = PostsTable.objects.filter(
                                                 timestamp__gte=users.objects.get(name=request.session['memid']).lastNotiView
@@ -105,6 +114,10 @@ def getTransaction(request):     # {{{
 
 
 def displayDetailedTransactions(request, kind):   # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     userstable = users.objects.all()
     txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
@@ -142,7 +155,10 @@ def displayDetailedTransactions(request, kind):   # {{{
             newtable[i][4] += ui_rows.username + ' '
         newtable[i][5] = row.timestamp
     if cmp(kind, 'all') == 0:                                              # checking the url
-        pass
+        if len(newtable) != 0:
+            for i, usr_row in enumerate(userstable):
+                usr_row.outstanding = newtable[len(newtable) - 1][6 + len(userstable) + i]
+                usr_row.save()                                                  # update the user table with the latest values
     else:                                                               # else get transctions of user alone
         currentUser = users.objects.get(username=kind)
         txn_ids = currentUser.transactions_set1.values('id')             # get txn ids of involved
@@ -154,23 +170,33 @@ def displayDetailedTransactions(request, kind):   # {{{
             txn_ids_list.append(i['id'])                                # make a txn_ids_list
         temp = newtable
         newtable = []                                                    # make "new" newtable form newtable
+        userpos = 0
+        for j in userstable:
+            if j.username == kind:
+                userpos = userpos + 1
+                break
+            userpos = userpos + 1
+        usercount = len(userstable)
         for i in temp:
             if i[0] in txn_ids_list:
-                newtable.append(i)
-    if len(newtable) != 0:
-        for i, usr_row in enumerate(userstable):
-            usr_row.outstanding = newtable[len(newtable) - 1][6 + len(userstable) + i]
-            usr_row.save()                                                  # update the user table with the latest values
+                t = i[0:6]
+                t.append(i[5 + userpos])
+                t.append(i[5 + userpos + usercount])
+                newtable.append(t)
     ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
-    member_name = request.session['memid']
     request.session['downloadData'] = list(newtable)
+    for i, I in enumerate(newtable):
+        I[0] = i
     newtable.reverse()
     return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
                                                    #}}}
 
 
 def deleteTransactions(request, txn_id):    # {{{
-    member_name = request.session['memid']
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.deleted = True
@@ -192,6 +218,10 @@ def deleteTransactions(request, txn_id):    # {{{
 
 
 def settleUP(request):  # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     usr_details = users.objects.order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
@@ -218,13 +248,11 @@ def settleUP(request):  # {{{
             temp = settleUPlist[loc]
             settleUPlist[loc] = settleUPlist[j]
             settleUPlist[j] = temp
-    member_name = request.session['memid']
     return render_to_response('settleUP.html', locals(), context_instance=RequestContext(request))
                         #}}}
 
 
 def fetchquote(request):  # {{{
-
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
     data = unicode(data, "utf-8")
     data = data.encode('utf-8')
@@ -244,11 +272,14 @@ def fetchquote(request):  # {{{
 
 
 def deleteUser(request, usr_id):  # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
     if(int(usr_id) >= 0):
         usrTOdelete = users.objects.get(id=usr_id)
         usrTOdelete.delete()
     all_usrs = users.objects.all()
-    member_name = request.session['memid']
     return render_to_response('deleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
     #}}}
 
@@ -313,7 +344,7 @@ def downloadAsCsv(request):
         del request.session['downloadData']
         userstable = list(users.objects.all())
         writer = csv.writer(response)
-        writer.writerow(["id","DESCRIPTION","AMOUNT","PAID BY","PAID FOR","TIME"]+userstable+userstable)
+        writer.writerow(["id", "DESCRIPTION", "AMOUNT", "PAID BY", "PAID FOR", "TIME"] + userstable + userstable)
         for i in range(len(newtable)):
             writer.writerow(newtable[i])
         return response

@@ -32,7 +32,7 @@
             {% for rows in ordered_userstable  %}
             <li><a href="/displayTransactions/{{rows.username}}/"><i class="icon-chevron-right"></i>{{rows.username|add:""}} --> {{rows.outstanding|floatformat}}</a></li>
             {%endfor%}
-            <li><a href="/download/">DOWNLOAD THE DATABASE</a></li>
+            <li><a href="/download/">DOWNLOAD DB</a></li>
         </ul>
         {% include "navlist.html" %}
    </div>

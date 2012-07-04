@@ -313,7 +313,7 @@ class PostsTableNotiListView(ListView):
 class PostsTablePostListView(ListView):
     def get_queryset(self):
         if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by('-timestamp').filter(PostType__exact='post')
+            return PostsTable.objects.order_by('timestamp').filter(PostType__exact='post')
 
 
 # TODO consolidate the database
@@ -357,6 +357,6 @@ def calculator(request, exp):
     html = response.read()
     error = re.findall(r'error: "(.*?)"', html)
     result = re.findall(r'rhs: "([\d.]+)"', html)
-    if error != [""] and error != ['0']:
+    if error != [""] and error != ['0'] and error != ['4']:
         result = error
     return HttpResponse(result)

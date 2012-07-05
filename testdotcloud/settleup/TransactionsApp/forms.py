@@ -39,6 +39,7 @@ class PostsForm(forms.ModelForm):
         super(PostsForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['audience'].label = 'Visible for'
+        self.fields['desc'].label = 'Post Desc'
 
     class Meta:
         model = PostsTable

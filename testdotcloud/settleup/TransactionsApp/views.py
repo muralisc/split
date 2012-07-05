@@ -1,4 +1,4 @@
-# Create your views here.
+# Django imports
 from django.shortcuts import render_to_response, redirect
 from django.views.generic import ListView
 from django.template import RequestContext
@@ -6,6 +6,7 @@ from django.http import HttpResponse
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm
+# Python imports
 import urllib
 import csv
 import re
@@ -16,7 +17,7 @@ import random
 def login(request):  # {{{
     try:
         if request.session.get('memid', False):
-            return redirect('/getTransaction')
+            return redirect('/createTransaction')
     except KeyError:
         pass
     if request.method == 'POST':
@@ -31,7 +32,7 @@ def login(request):  # {{{
             else:
                 request.session['memid'] = memberQuerySet[0].name
                 request.session['memUsername'] = memberQuerySet[0].username
-                return redirect('/getTransaction')
+                return redirect('/createTransaction')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -43,9 +44,10 @@ def logout(request):  # {{{
     #}}}
 
 
-def adduser(request):                    # {{{
+def create_user(request):                    # {{{
+    # checking if logged in
     if 'memid' not in request.session:
-        return redirect('/')
+        pass
     else:
         member_name = request.session['memid']
     if request.method == 'POST':
@@ -57,7 +59,7 @@ def adduser(request):                    # {{{
                 usr.outstanding = 0
                 usr.lastNotiView = datetime.datetime.now()
                 usr.save()
-                adduser_msg = "YIPEE!! User added.Login to continue"
+                adduser_msg = "User added.Login to continue"
             else:
                 adduser_msg = "Username alredy exist. please chose a new one"
         else:
@@ -67,17 +69,7 @@ def adduser(request):                    # {{{
                                          #}}}
 
 
-def displayusers(request):              # {{{
-    if 'memid' not in request.session:
-        return redirect('/')
-    else:
-        member_name = request.session['memid']
-    dbrows = users.objects.all()
-    return render_to_response('displayUser.html', locals(), context_instance=RequestContext(request))
-    #}}}
-
-
-def getTransaction(request):     # {{{
+def create_transaction(request):     # {{{
     if 'memid' not in request.session:
         return redirect('/')
     else:
@@ -94,7 +86,8 @@ def getTransaction(request):     # {{{
                                     )
             postObject.save()
             for usr in (transactionsObj.users_involved.all()):
-                postObject.audience.add(usr)                     # should be added like this cause it need a primary id for ManyToManyField
+                # should be added like this cause it need a primary id for ManyToManyField
+                postObject.audience.add(usr)
             postObject.audience.add(transactionsObj.user_paid)
             return redirect('/displayTransactions/' + postObject.author.username + '/')
     else:
@@ -113,7 +106,50 @@ def getTransaction(request):     # {{{
                                      #}}}
 
 
-def displayDetailedTransactions(request, kind):   # {{{
+#========================================================
+def display_users(request):              # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
+    dbrows = users.objects.all()
+    return render_to_response('display.html', locals(), context_instance=RequestContext(request))
+    #}}}
+
+
+class DisplayNotifications(ListView):
+    def get_queryset(self):
+        if(self.args[0] == 'all'):
+            return PostsTable.objects.order_by(
+                                              '-timestamp'
+                                              ).filter(
+                                              PostType__exact='noti')
+
+    def get_context_data(self, **kwargs):
+        usr = users.objects.get(name=self.request.session['memid'])
+        lsttime = usr.lastNotiView
+        usr.lastNotiView = datetime.datetime.now()
+        usr.save()
+        context = super(DisplayNotifications, self).get_context_data(**kwargs)
+        context['object_list_new'] = PostsTable.objects.filter(
+                                                    timestamp__gte=lsttime
+                                                    ).filter(
+                                                    PostType__exact='noti'
+                                                    ).filter(
+                                                    audience__in=[usr.id]
+                                                    ).order_by('-timestamp')
+        context['noOfNewNoti'] = len(context['object_list_new'])
+        context['member_name'] = usr.name
+        return context
+
+
+class DisplayPosts(ListView):
+    def get_queryset(self):
+        if(self.args[0] == 'all'):
+            return PostsTable.objects.order_by('timestamp').filter(PostType__exact='post')
+
+
+def display_transactions(request, kind):   # {{{
     if 'memid' not in request.session:
         return redirect('/')
     else:
@@ -122,10 +158,12 @@ def displayDetailedTransactions(request, kind):   # {{{
     txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
     for i in userstable:
-        rows.update({i.username: 0})                                     # make the sample row dict for table
+        # make the sample row dictionary for the "newtable"
+        rows.update({i.username: 0})
     table = [dict(rows) for k in range(txnstable.count())]
     i = 0
-    for i, curtxn in enumerate(txnstable):                               # fetch each database row
+    # fetch each database row
+    for i, curtxn in enumerate(txnstable):
         if i == 0:
             table[i][curtxn.user_paid.username] += curtxn.amount
             perpersoncost = curtxn.amount / curtxn.users_involved.count()
@@ -135,7 +173,8 @@ def displayDetailedTransactions(request, kind):   # {{{
             table[i][curtxn.user_paid.username] += curtxn.amount
             perpersoncost = curtxn.amount / curtxn.users_involved.count()
             for usrinv in curtxn.users_involved.all():
-                table[i][usrinv.username] -= perpersoncost              # populatin "table" a list of dictionaries
+                # populating "table" a list of dictionaries
+                table[i][usrinv.username] -= perpersoncost
     newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
     for i, I in enumerate(table):
         for j, J in enumerate(userstable):
@@ -154,22 +193,29 @@ def displayDetailedTransactions(request, kind):   # {{{
         for ui_rows in row.users_involved.all():
             newtable[i][4] += ui_rows.username + ' '
         newtable[i][5] = row.timestamp
-    if cmp(kind, 'all') == 0:                                              # checking the url
+    # checking the url
+    if cmp(kind, 'all') == 0:
         if len(newtable) != 0:
             for i, usr_row in enumerate(userstable):
                 usr_row.outstanding = newtable[len(newtable) - 1][6 + len(userstable) + i]
-                usr_row.save()                                                  # update the user table with the latest values
-    else:                                                               # else get transctions of user alone
+                # update the user table with the latest values
+                usr_row.save()
+    # else get transctions of user alone
+    else:
         currentUser = users.objects.get(username=kind)
-        txn_ids = currentUser.transactions_set1.values('id')             # get txn ids of involved
-        txn_ids1 = currentUser.transactions_set.values('id')             # get txn ids of paid
+        # get txn ids of involved
+        txn_ids = currentUser.transactions_set1.values('id')
+        # get txn ids of paid
+        txn_ids1 = currentUser.transactions_set.values('id')
         txn_ids_list = []
         for i in txn_ids:
             txn_ids_list.append(i['id'])
         for i in txn_ids1:
-            txn_ids_list.append(i['id'])                                # make a txn_ids_list
+            # make a txn_ids_list
+            txn_ids_list.append(i['id'])
         temp = newtable
-        newtable = []                                                    # make "new" newtable form newtable
+        # make "new" newtable form newtable
+        newtable = []
         userpos = 0
         for j in userstable:
             if j.username == kind:
@@ -183,16 +229,18 @@ def displayDetailedTransactions(request, kind):   # {{{
                 t.append(i[5 + userpos])
                 t.append(i[5 + userpos + usercount])
                 newtable.append(t)
-    ordered_userstable = users.objects.order_by('-outstanding')         # a ordered_userstable variable for link display in order
+    # a ordered_userstable variable for link display in order
+    ordered_userstable = users.objects.order_by('-outstanding')
     request.session['downloadData'] = list(newtable)
     for i, I in enumerate(newtable):
         I[0] = i
     newtable.reverse()
     return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
-                                                   #}}}
+                                                  #}}}
+#========================================================
 
 
-def deleteTransactions(request, txn_id):    # {{{
+def delete_transactions(request, txn_id):    # {{{
     if 'memid' not in request.session:
         return redirect('/')
     else:
@@ -217,7 +265,20 @@ def deleteTransactions(request, txn_id):    # {{{
         # }}}
 
 
-def settleUP(request):  # {{{
+def delete_user(request, usr_id):  # {{{
+    if 'memid' not in request.session:
+        return redirect('/')
+    else:
+        member_name = request.session['memid']
+    if(int(usr_id) >= 0):
+        usrTOdelete = users.objects.get(id=usr_id)
+        usrTOdelete.delete()
+    all_usrs = users.objects.all()
+    return render_to_response('deleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
+     #}}}
+
+
+def settle_grp(request):  # {{{
     if 'memid' not in request.session:
         return redirect('/')
     else:
@@ -252,7 +313,7 @@ def settleUP(request):  # {{{
                         #}}}
 
 
-def fetchquote(request):  # {{{
+def fetch_quote(request):  # {{{
     data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
     data = unicode(data, "utf-8")
     data = data.encode('utf-8')
@@ -271,53 +332,8 @@ def fetchquote(request):  # {{{
     #}}}
 
 
-def deleteUser(request, usr_id):  # {{{
-    if 'memid' not in request.session:
-        return redirect('/')
-    else:
-        member_name = request.session['memid']
-    if(int(usr_id) >= 0):
-        usrTOdelete = users.objects.get(id=usr_id)
-        usrTOdelete.delete()
-    all_usrs = users.objects.all()
-    return render_to_response('deleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
-    #}}}
-
-
-class PostsTableNotiListView(ListView):
-    def get_queryset(self):
-        if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by(
-                                              '-timestamp'
-                                              ).filter(
-                                              PostType__exact='noti')
-
-    def get_context_data(self, **kwargs):
-        usr = users.objects.get(name=self.request.session['memid'])
-        lsttime = usr.lastNotiView
-        usr.lastNotiView = datetime.datetime.now()
-        usr.save()
-        context = super(PostsTableNotiListView, self).get_context_data(**kwargs)
-        context['object_list_new'] = PostsTable.objects.filter(
-                                                    timestamp__gte=lsttime
-                                                    ).filter(
-                                                    PostType__exact='noti'
-                                                    ).filter(
-                                                    audience__in=[usr.id]
-                                                    ).order_by('-timestamp')
-        context['noOfNewNoti'] = len(context['object_list_new'])
-        context['member_name'] = usr.name
-        return context
-
-
-class PostsTablePostListView(ListView):
-    def get_queryset(self):
-        if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by('timestamp').filter(PostType__exact='post')
-
-
 # TODO consolidate the database
-def Putpost(request):
+def create_post(request):
     member_name = request.session['memid']
     if request.method == 'POST':
         form = PostsForm(request.POST)
@@ -329,13 +345,13 @@ def Putpost(request):
             PostsTableObj.author = users.objects.get(name=member_name)
             PostsTableObj.PostType = 'post'
             PostsTableObj.save()
-            return redirect('/posts/all/')
+            return redirect('/notifications/all/')
     else:
         form = PostsForm()
     return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
 
 
-def downloadAsCsv(request):
+def download_as_csv(request):
     if 'downloadData' in request.session:
         # Create the HttpResponse object with the appropriate CSV header.
         response = HttpResponse(mimetype='text/csv')

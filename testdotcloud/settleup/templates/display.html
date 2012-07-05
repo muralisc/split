@@ -1,0 +1,93 @@
+<!-- Template for generating "user display" and "notification/posts display" pages -->
+{% extends "base.html" %}
+{% block content %}
+<div class="row-fluid">
+    <div class="span2">
+        {% include "navlist.html"%}
+    </div>
+    <div class="span10">
+<!-- {{{ user display -->
+        {% if display_type == 'users' %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>name</th>
+                    <th>username</th>
+                    <th>outstanding</th>
+                    <th>lastNotiView</th>
+                </tr>
+            </thead>
+            {% for row in dbrows %}
+            <tr>
+                <td>{{ row.name }}</td>
+                <td>{{ row.username }}</td>
+                <td>{{ row.outstanding  }}</td>
+                <td>{{ row.lastNotiView  }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        {% endif %}
+<!-- }}} -->
+<!-- {{{ notifications display-->
+        {% if display_type == 'notifications' %}
+            <table class="table">
+                {% for row in object_list_new %}
+                <tr>
+                    <td>
+                        {{ row.author|upper }}
+                        {{ row.desc }}->
+                        <b>{{ row.linkToTransaction.amount }}</b> paid by 
+                        {{ row.linkToTransaction.user_paid|upper }} for
+                        {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                    </td>
+                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <h3>All notifications</h3>
+            <table class="table table-striped">
+                {% for row in object_list %}
+                <tr>
+                    <td>
+                        {{ row.author|upper }}
+                        {{ row.desc }}->
+                        <b>{{ row.linkToTransaction.amount }}</b> paid by 
+                        {{ row.linkToTransaction.user_paid|upper }} for
+                        {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                    </td>
+                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+<!-- }}} -->
+<!-- {{{ posts display-->
+        {% if display_type == 'posts' %}
+            <table class="table ">
+                {% for row in object_list_new %}
+                <tr>
+                    <td>
+                        <b>{{ row.author }}</b> posted
+                        {{ row.desc }}
+                    </td>
+                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <h3>old posts</h3>
+            <table class="table table-striped">
+                {% for row in object_list %}
+                <tr>
+                    <td>
+                        <b>{{ row.author }}</b> posted
+                        {{ row.desc }}
+                    </td>
+                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+<!-- }}} -->
+    </div>
+</div>
+{% endblock %}

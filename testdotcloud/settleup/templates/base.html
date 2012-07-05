@@ -29,12 +29,14 @@
                 </div>
             </div>
             {% endblock %}
-
+				
+				{% if member_name %}
             <div class="row-fluid">
                 <h4 class="pull-right">
-                    {{ member_name|upper }}
+                    {{ member_name|upper }} <a class="btn btn-primary btn-mini" href="/logout">Logout</a>
                 </h4>
             </div>
+				{% endif %}            
             {% block content%}
             {% endblock %}
 

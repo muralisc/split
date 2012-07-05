@@ -113,11 +113,14 @@ def display_users(request):              # {{{
     else:
         member_name = request.session['memid']
     dbrows = users.objects.all()
+    display_type = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
 
 
 class DisplayNotifications(ListView):
+    template_name = "display.html"
+
     def get_queryset(self):
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
@@ -140,13 +143,22 @@ class DisplayNotifications(ListView):
                                                     ).order_by('-timestamp')
         context['noOfNewNoti'] = len(context['object_list_new'])
         context['member_name'] = usr.name
+        context['display_type'] = 'notifications'
         return context
 
 
 class DisplayPosts(ListView):
+    template_name = "display.html"
+
     def get_queryset(self):
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by('timestamp').filter(PostType__exact='post')
+
+    def get_context_data(self, **kwargs):
+        context = super(DisplayPosts, self).get_context_data(**kwargs)
+        context['display_type'] = 'posts'
+        context['member_name'] = self.request.session['memid']
+        return context
 
 
 def display_transactions(request, kind):   # {{{
@@ -261,7 +273,8 @@ def delete_transactions(request, txn_id):    # {{{
         postObject.audience.add(txnTOdelete.user_paid)
         return redirect('/deleteTransactions/-1/')
     all_txns = transactions.objects.filter(deleted__exact=False)
-    return render_to_response('deleteTransaction.html', locals(), context_instance=RequestContext(request))
+    delete_type = 'transactions'
+    return render_to_response('delete.html', locals(), context_instance=RequestContext(request))
         # }}}
 
 
@@ -274,7 +287,8 @@ def delete_user(request, usr_id):  # {{{
         usrTOdelete = users.objects.get(id=usr_id)
         usrTOdelete.delete()
     all_usrs = users.objects.all()
-    return render_to_response('deleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
+    delete_type = 'users'
+    return render_to_response('delete.html', locals(), context_instance=RequestContext(request))  # }}}
      #}}}
 
 

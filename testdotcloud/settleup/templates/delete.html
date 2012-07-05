@@ -1,0 +1,40 @@
+<!-- Template for generating "user delete" and "template delete" pages -->
+{% extends "base.html" %}
+{% block content %}
+<div class="row-fluid">
+    <div class="span2">
+        {% include "navlist.html" %}
+    </div>
+    <div class="span9">
+        {% if delete_type = 'users' %}
+            <table class="table table-striped">
+                {% for row in all_usrs %}
+                <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.outstanding}}</td>
+                    <td><a href="/deleteUser/{{ row.id }}/">delete</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+        {% if delete_type = 'transactions' %}
+            <table class="table table-striped">
+                {% for row in all_txns %}
+                <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.amount  }}</td>
+                    <td>{{ row.user_paid  }}</td>
+                    <td>
+                        {% for ui_rows in row.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                    </td>
+                    <td>{{ row.timestamp  }}</td>
+                    <td><a href="/deleteTransactions/{{ row.id }}/">delete</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

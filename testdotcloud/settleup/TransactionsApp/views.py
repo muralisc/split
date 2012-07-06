@@ -16,22 +16,21 @@ import random
 
 def login(request):  # {{{
     try:
-        if request.session.get('memid', False):
+        if request.session.get('sUserFullname', False):
             return redirect('/createTransaction')
     except KeyError:
         pass
     if request.method == 'POST':
-        usrFromForm = loginForm(request.POST)
-        if usrFromForm.is_valid():
+        form = loginForm(request.POST)
+        if form.is_valid():
             memberQuerySet = users.objects.filter(
-            username__exact=usrFromForm.cleaned_data['username']
+            username__exact=form.cleaned_data['username']
             ).filter(
-            password__exact=usrFromForm.cleaned_data['password'])
+            password__exact=form.cleaned_data['password'])
             if memberQuerySet.count() == 0:
-                login_msg = "Invalid username or password"
+                loginMessage = "Invalid username or password"
             else:
-                request.session['memid'] = memberQuerySet[0].name
-                request.session['memUsername'] = memberQuerySet[0].username
+                request.session['sUserFullname'] = memberQuerySet[0].name
                 return redirect('/createTransaction')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
@@ -39,29 +38,29 @@ def login(request):  # {{{
 
 
 def logout(request):  # {{{
-    del request.session['memid']
+    del request.session['sUserFullname']
     return redirect('/')
     #}}}
 
 
 def create_user(request):                    # {{{
     # checking if logged in
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         pass
     else:
-        member_name = request.session['memid']
+        userFullName = request.session['sUserFullname']
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
             if users.objects.filter(username__exact=form.cleaned_data['username']).count() == 0:
                 form.cleaned_data['outstanding'] = 0
-                usr = form.save(commit=False)
-                usr.outstanding = 0
-                usr.lastNotiView = datetime.datetime.now()
-                usr.save()
-                adduser_msg = "User added.Login to continue"
+                currentUserObject = form.save(commit=False)
+                currentUserObject.outstanding = 0
+                currentUserObject.lastNotiView = datetime.datetime.now()
+                currentUserObject.save()
+                createUserPrompt = "User added.Login to continue"
             else:
-                adduser_msg = "Username alredy exist. please chose a new one"
+                createUserPrompt = "Username alredy exist. please chose a new one"
         else:
             pass
     form = addUserForm()
@@ -70,16 +69,22 @@ def create_user(request):                    # {{{
 
 
 def create_transaction(request):     # {{{
-    if 'memid' not in request.session:
+    """
+    displays and process a new transaction form
+    displays the number of new notifications
+    makes and entry in the Posts table
+    """
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
+        userFullName = request.session['sUserFullname']
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
+            #retrieving the transactions object to populate the postObject field.
             transactionsObj = form.save()
             postObject = PostsTable(
-                            author=users.objects.get(name=member_name),
+                            author=users.objects.get(name=userFullName),
                             desc='added transaction',
                             linkToTransaction=transactions.objects.latest('timestamp'),
                             PostType='noti',
@@ -94,11 +99,11 @@ def create_transaction(request):     # {{{
         form = transactionsForm()
     try:
         noOfNewNoti = PostsTable.objects.filter(
-                                                timestamp__gte=users.objects.get(name=request.session['memid']).lastNotiView
+                                                timestamp__gte=users.objects.get(name=request.session['sUserFullname']).lastNotiView
                                                 ).filter(
                                                 PostType__exact='noti'
                                                 ).filter(
-                                                audience__in=[users.objects.get(name=request.session['memid']).id]
+                                                audience__in=[users.objects.get(name=request.session['sUserFullname']).id]
                                                 ).order_by('-timestamp').count()
     except:
         noOfNewNoti = 0
@@ -108,12 +113,12 @@ def create_transaction(request):     # {{{
 
 #========================================================
 def display_users(request):              # {{{
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
-    dbrows = users.objects.all()
-    display_type = "users"
+        userFullName = request.session['sUserFullname']
+    usersDBrows = users.objects.all()
+    displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
 
@@ -129,7 +134,7 @@ class DisplayNotifications(ListView):
                                               PostType__exact='noti')
 
     def get_context_data(self, **kwargs):
-        usr = users.objects.get(name=self.request.session['memid'])
+        usr = users.objects.get(name=self.request.session['sUserFullname'])
         lsttime = usr.lastNotiView
         usr.lastNotiView = datetime.datetime.now()
         usr.save()
@@ -142,8 +147,8 @@ class DisplayNotifications(ListView):
                                                     audience__in=[usr.id]
                                                     ).order_by('-timestamp')
         context['noOfNewNoti'] = len(context['object_list_new'])
-        context['member_name'] = usr.name
-        context['display_type'] = 'notifications'
+        context['userFullName'] = usr.name
+        context['displayType'] = 'notifications'
         return context
 
 
@@ -156,16 +161,16 @@ class DisplayPosts(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(DisplayPosts, self).get_context_data(**kwargs)
-        context['display_type'] = 'posts'
-        context['member_name'] = self.request.session['memid']
+        context['displayType'] = 'posts'
+        context['userFullName'] = self.request.session['sUserFullname']
         return context
 
 
 def display_transactions(request, kind):   # {{{
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
+        userFullName = request.session['sUserFullname']
     userstable = users.objects.all()
     txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
@@ -253,16 +258,16 @@ def display_transactions(request, kind):   # {{{
 
 
 def delete_transactions(request, txn_id):    # {{{
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
+        userFullName = request.session['sUserFullname']
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.deleted = True
         txnTOdelete.save()
         postObject = PostsTable(
-                        author=users.objects.get(name=member_name),
+                        author=users.objects.get(name=userFullName),
                         desc='deleted transaction',
                         linkToTransaction=transactions.objects.get(id=txn_id),
                         PostType='noti',
@@ -272,35 +277,35 @@ def delete_transactions(request, txn_id):    # {{{
             postObject.audience.add(usr)
         postObject.audience.add(txnTOdelete.user_paid)
         return redirect('/deleteTransactions/-1/')
-    all_txns = transactions.objects.filter(deleted__exact=False)
-    delete_type = 'transactions'
+    txnsDBrows = transactions.objects.filter(deleted__exact=False)
+    deleteType = 'transactions'
     return render_to_response('delete.html', locals(), context_instance=RequestContext(request))
         # }}}
 
 
 def delete_user(request, usr_id):  # {{{
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
+        userFullName = request.session['sUserFullname']
     if(int(usr_id) >= 0):
         usrTOdelete = users.objects.get(id=usr_id)
         usrTOdelete.delete()
-    all_usrs = users.objects.all()
-    delete_type = 'users'
+    usersDBrows = users.objects.all()
+    deleteType = 'users'
     return render_to_response('delete.html', locals(), context_instance=RequestContext(request))  # }}}
      #}}}
 
 
 def settle_grp(request):  # {{{
-    if 'memid' not in request.session:
+    if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
-        member_name = request.session['memid']
-    usr_details = users.objects.order_by('-outstanding')
+        userFullName = request.session['sUserFullname']
+    usersDBrows = users.objects.order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
-    for i in usr_details:
+    for i in usersDBrows:
         settleUPlist.append([i.username, i.outstanding])
     while (len(settleUPlist) != 1):
         n = len(settleUPlist)
@@ -328,10 +333,10 @@ def settle_grp(request):  # {{{
 
 
 def fetch_quote(request):  # {{{
-    data = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
-    data = unicode(data, "utf-8")
-    data = data.encode('utf-8')
-    quoteslines = re.split('#', data)
+    htmlData = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
+    htmlData = unicode(htmlData, "utf-8")
+    htmlData = htmlData.encode('utf-8')
+    quoteslines = re.split('#', htmlData)
     unshownQueryset = quotes.objects.filter(shown=0)
     if (quotes.objects.count() < len(quoteslines) or len(unshownQueryset) == 0):
         quotes.objects.all().delete()
@@ -342,13 +347,13 @@ def fetch_quote(request):  # {{{
     a = unshownQueryset[cur_quo_index].q
     unshownQueryset[cur_quo_index].shown = 1
     unshownQueryset[cur_quo_index].save()
-    return render_to_response('index.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('quotes.html', locals(), context_instance=RequestContext(request))
     #}}}
 
 
 # TODO consolidate the database
 def create_post(request):
-    member_name = request.session['memid']
+    userFullName = request.session['sUserFullname']
     if request.method == 'POST':
         form = PostsForm(request.POST)
         if form.is_valid():
@@ -356,7 +361,7 @@ def create_post(request):
             # so we get the obj to manipulate
             # http://stackoverflow.com/questions/7715263/whats-the-cleanest-way-to-add-arbitrary-data-to-modelform
             PostsTableObj = form.save(commit=False)
-            PostsTableObj.author = users.objects.get(name=member_name)
+            PostsTableObj.author = users.objects.get(name=userFullName)
             PostsTableObj.PostType = 'post'
             PostsTableObj.save()
             return redirect('/notifications/all/')

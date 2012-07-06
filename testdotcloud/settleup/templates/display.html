@@ -7,7 +7,7 @@
     </div>
     <div class="span10">
 <!-- {{{ user display -->
-        {% if display_type == 'users' %}
+        {% if displayType == 'users' %}
         <table class="table">
             <thead>
                 <tr>
@@ -17,7 +17,7 @@
                     <th>lastNotiView</th>
                 </tr>
             </thead>
-            {% for row in dbrows %}
+            {% for row in usersDBrows %}
             <tr>
                 <td>{{ row.name }}</td>
                 <td>{{ row.username }}</td>
@@ -29,7 +29,7 @@
         {% endif %}
 <!-- }}} -->
 <!-- {{{ notifications display-->
-        {% if display_type == 'notifications' %}
+        {% if displayType == 'notifications' %}
             <table class="table">
                 {% for row in object_list_new %}
                 <tr>
@@ -62,7 +62,7 @@
         {% endif %}
 <!-- }}} -->
 <!-- {{{ posts display-->
-        {% if display_type == 'posts' %}
+        {% if displayType == 'posts' %}
             <table class="table ">
                 {% for row in object_list_new %}
                 <tr>

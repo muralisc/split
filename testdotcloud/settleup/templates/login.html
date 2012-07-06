@@ -8,7 +8,7 @@
     </div>
     <div class ="span2"></div>
     <div class ="span3">
-        {{ login_msg }}
+        {{ loginMessage }}
         <form class="well" action="" method="post">
             {% csrf_token %}
             {{ form.as_table }}

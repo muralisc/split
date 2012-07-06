@@ -6,9 +6,9 @@
         {% include "navlist.html" %}
     </div>
     <div class="span9">
-        {% if delete_type = 'users' %}
+        {% if deleteType = 'users' %}
             <table class="table table-striped">
-                {% for row in all_usrs %}
+                {% for row in usersDBrows %}
                 <tr>
                     <td>{{ row.id }}</td>
                     <td>{{ row.username }}</td>
@@ -18,9 +18,9 @@
                 {% endfor %}
             </table>
         {% endif %}
-        {% if delete_type = 'transactions' %}
+        {% if deleteType = 'transactions' %}
             <table class="table table-striped">
-                {% for row in all_txns %}
+                {% for row in txnsDBrows %}
                 <tr>
                     <td>{{ row.id }}</td>
                     <td>{{ row.username }}</td>

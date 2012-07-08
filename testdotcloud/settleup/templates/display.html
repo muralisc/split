@@ -63,6 +63,7 @@
 <!-- }}} -->
 <!-- {{{ posts display-->
         {% if displayType == 'posts' %}
+            <h3>new posts</h3>
             <table class="table ">
                 {% for row in object_list_new %}
                 <tr>
@@ -70,6 +71,7 @@
                         <b>{{ row.author }}</b> posted
                         {{ row.desc }}
                     </td>
+                    <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                     <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
                 </tr>
                 {% endfor %}
@@ -82,6 +84,7 @@
                         <b>{{ row.author }}</b> posted
                         {{ row.desc }}
                     </td>
+                    <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                     <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
                 </tr>
                 {% endfor %}

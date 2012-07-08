@@ -1,5 +1,6 @@
 from django import forms
 from TransactionsApp.models import transactions, users, PostsTable
+from django.db.models import Q
 
 
 class loginForm(forms.Form):
@@ -16,6 +17,7 @@ class transactionsForm(forms.ModelForm):   # {{{
                 'users_involved': forms.CheckboxSelectMultiple(),
                 }
         exclude = ('perpersoncost',
+                   'group',
                    'deleted',
                 )
         #}}}
@@ -26,7 +28,11 @@ class addUserForm(forms.ModelForm):  # {{{
         model = users
         exclude = (
                 'outstanding',
-                'lastNotiView',
+                'deleted',
+                'lastLogin',
+                'lastNotification',
+                'lastPost',
+                'groups',
                 )
         widgets = {
                 'password': forms.PasswordInput(),
@@ -35,11 +41,14 @@ class addUserForm(forms.ModelForm):  # {{{
 
 
 class PostsForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, usr, *args, **kwargs):
         super(PostsForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
-        self.fields['audience'].label = 'Visible for'
+        self.fields['audience'].label = 'Visible to'
         self.fields['desc'].label = 'Post Desc'
+        self.fields['audience'].queryset = users.objects.filter(
+                                                    ~Q(name__exact=usr.name)
+                                                    )
 
     class Meta:
         model = PostsTable
@@ -52,4 +61,5 @@ class PostsForm(forms.ModelForm):
                    'timestamp',
                    'linkToTransaction',
                    'PostType',
+                   'deleted',
                 )

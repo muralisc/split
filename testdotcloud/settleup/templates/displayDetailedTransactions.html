@@ -4,15 +4,15 @@
 <script type="text/javascript">
     $(document).ready(function() {
             $('#mytable').fixheadertable({
-                caption     : 'Table',
+                caption     : '{{ kind }} Transactions',
                 whiteSpace  : 'normal',
                 height      : 400,
                 width       : 950,
-                minWidthAuto: true,
-                addTitles   : true,
                 zebra       : true,
-                sortable    : true,
-                rowsPerPage : 10,
+                {% ifequal kind 'all'%}
+                minWidth    : 1100,
+                {% endifequal %}
+                sortable    : true, 
 });
             });
         </script>
@@ -30,7 +30,7 @@
             <li class="nav-header">Click on A name</li>
             <li><a href="/displayTransactions/all/"><i class="icon-chevron-right"></i>All Transactions</a></li>
             {% for rows in ordered_userstable  %}
-            <li><a href="/displayTransactions/{{rows.username}}/"><i class="icon-chevron-right"></i>{{rows.username|add:""}} --> {{rows.outstanding|floatformat}}</a></li>
+            <li><a href="/displayTransactions/{{rows.name}}/"><i class="icon-chevron-right"></i>{{rows.username|add:""}} --> {{rows.outstanding|floatformat}}</a></li>
             {%endfor%}
             <li><a href="/download/">DOWNLOAD DB</a></li>
         </ul>
@@ -52,7 +52,7 @@
                         {% endfor  %}
                         
                         {% for i in userstable %}
-                        <th>Cumulative {{ i.username }}</th>
+                        <th>{{ i.username|upper }}</th>
                         {% endfor  %}
                     {% else %}
                         <th>{{ kind }}</th>

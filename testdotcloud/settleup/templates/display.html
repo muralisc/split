@@ -14,7 +14,6 @@
                     <th>name</th>
                     <th>username</th>
                     <th>outstanding</th>
-                    <th>lastNotiView</th>
                 </tr>
             </thead>
             {% for row in usersDBrows %}
@@ -22,7 +21,6 @@
                 <td>{{ row.name }}</td>
                 <td>{{ row.username }}</td>
                 <td>{{ row.outstanding  }}</td>
-                <td>{{ row.lastNotiView  }}</td>
             </tr>
             {% endfor%}
         </table>
@@ -68,8 +66,8 @@
                 {% for row in object_list_new %}
                 <tr>
                     <td>
-                        <b>{{ row.author }}</b> posted
-                        {{ row.desc }}
+                        {{ row.desc }}::
+                        <b>{{ row.author }}</b> 
                     </td>
                     <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                     <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
@@ -81,8 +79,8 @@
                 {% for row in object_list %}
                 <tr>
                     <td>
-                        <b>{{ row.author }}</b> posted
-                        {{ row.desc }}
+                        {{ row.desc }}::
+                        <b>{{ row.author }}</b> 
                     </td>
                     <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                     <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>

@@ -10,7 +10,6 @@ from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, Post
 import urllib
 import csv
 import re
-import datetime
 import random
 
 
@@ -89,6 +88,7 @@ def create_transaction(request):     # {{{
         return redirect('/')
     else:
         userFullName = request.session['sUserFullname']
+    usr = users.objects.get(name=request.session['sUserFullname'])
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
@@ -101,11 +101,13 @@ def create_transaction(request):     # {{{
                             PostType='noti',
                                     )
             postObject.save()
-            for usr in (transactionsObj.users_involved.all()):
+            usr.lastNotification = postObject
+            usr.save()
+            for user in (transactionsObj.users_involved.all()):
                 # should be added like this cause it need a primary id for ManyToManyField
-                postObject.audience.add(usr)
+                postObject.audience.add(user)
             postObject.audience.add(transactionsObj.user_paid)
-            return redirect('/displayTransactions/' + postObject.author.username + '/')
+            return redirect('/displayTransactions/' + postObject.author.name + '/')
     else:
         form = transactionsForm()
     try:
@@ -117,6 +119,9 @@ def create_transaction(request):     # {{{
                                                 audience__in=[users.objects.get(name=userFullName).id]
                                                 ).count()
     except:
+        if PostsTable.objects.count() > 0 and usr.lastNotification == None:
+            usr.lastNotification = PostsTable.objects.get(id=1)
+            usr.save()
         noOfNewNoti = 0
     try:
         noOfNewPosts = PostsTable.objects.filter(
@@ -127,12 +132,39 @@ def create_transaction(request):     # {{{
                                                 audience__in=[users.objects.get(name=userFullName).id]
                                                 ).count()
     except:
+        if PostsTable.objects.count() > 0 and usr.lastPost == None:
+            usr.lastPost = PostsTable.objects.get(id=1)
+            usr.save()
         noOfNewPosts = 0
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
 
 
+def create_post(request):
+    userFullName = request.session['sUserFullname']
+    usr = users.objects.get(name=request.session['sUserFullname'])
+    if request.method == 'POST':
+        form = PostsForm(usr, request.POST)
+        if form.is_valid():
+            # we need to add the user data so we save the form without commit
+            # so we get the obj to manipulate
+            # http://stackoverflow.com/questions/7715263/whats-the-cleanest-way-to-add-arbitrary-data-to-modelform
+            PostsTableObj = form.save(commit=False)
+            PostsTableObj.author = usr
+            PostsTableObj.PostType = 'post'
+            PostsTableObj.save()
+            form.save_m2m()
+            PostsTableObj.audience.add(usr)
+            # update user object
+            usr.lastPost = PostsTableObj
+            usr.save()
+            return redirect('/displayPosts/all/')
+    else:
+        form = PostsForm(usr)
+    return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
 #========================================================
+
+
 def display_users(request):              # {{{
     if 'sUserFullname' not in request.session:
         return redirect('/')
@@ -148,11 +180,15 @@ class DisplayNotifications(ListView):
     template_name = "display.html"
 
     def get_queryset(self):
+        usr = users.objects.get(name=self.request.session['sUserFullname'])
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                               '-timestamp'
                                               ).filter(
-                                              PostType__exact='noti')
+                                              PostType__exact='noti'
+                                              ).filter(
+                                              audience__in=[usr.id]
+                                              )
 
     def get_context_data(self, **kwargs):
         usr = users.objects.get(name=self.request.session['sUserFullname'])
@@ -253,6 +289,7 @@ def display_transactions(request, kind):   # {{{
         for ui_rows in row.users_involved.all():
             newtable[i][4] += ui_rows.username + ' '
         newtable[i][5] = row.timestamp
+    request.session['downloadData'] = list(newtable)
     # checking the url
     if cmp(kind, 'all') == 0:
         if len(newtable) != 0:
@@ -278,7 +315,7 @@ def display_transactions(request, kind):   # {{{
         newtable = []
         userpos = 0
         for j in userstable:
-            if j.username == kind:
+            if j.name == kind:
                 userpos = userpos + 1
                 break
             userpos = userpos + 1
@@ -291,7 +328,6 @@ def display_transactions(request, kind):   # {{{
                 newtable.append(t)
     # a ordered_userstable variable for link display in order
     ordered_userstable = users.objects.order_by('-outstanding')
-    request.session['downloadData'] = list(newtable)
     for i, I in enumerate(newtable):
         I[0] = i
     newtable.reverse()
@@ -395,29 +431,6 @@ def fetch_quote(request):  # {{{
 
 
 # TODO consolidate the database
-def create_post(request):
-    userFullName = request.session['sUserFullname']
-    usr = users.objects.get(name=request.session['sUserFullname'])
-    if request.method == 'POST':
-        form = PostsForm(usr, request.POST)
-        if form.is_valid():
-            # we need to add the user data so we save the form without commit
-            # so we get the obj to manipulate
-            # http://stackoverflow.com/questions/7715263/whats-the-cleanest-way-to-add-arbitrary-data-to-modelform
-            PostsTableObj = form.save(commit=False)
-            PostsTableObj.author = usr
-            PostsTableObj.PostType = 'post'
-            PostsTableObj.save()
-            form.save_m2m()
-            PostsTableObj.audience.add(usr)
-            # update user object
-            usr.lastPost = PostsTableObj
-            usr.save()
-            return redirect('/displayPosts/all/')
-    else:
-        form = PostsForm(usr)
-    return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
-
 
 def download_as_csv(request):
     if 'downloadData' in request.session:

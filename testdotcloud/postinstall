@@ -1,8 +1,6 @@
 #!/bin/sh
 python createdb.py
-python settleup/manage.py schemamigration myapp --auto
-python settleup/manage.py migrate --list
-python settleup/manage.py migrate
+python settleup/manage.py syncdb --noinput
 python mkadmin.py
 mkdir -p /home/dotcloud/data/media /home/dotcloud/volatile/static
 python settleup/manage.py collectstatic --noinput

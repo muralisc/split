@@ -83,17 +83,36 @@ def create_transaction(request):     # {{{
     displays and process a new transaction form
     displays the number of new notifications
     makes and entry in the Posts table
+    updates outstanding column in usertable
     """
     if 'sUserFullname' not in request.session:
         return redirect('/')
     else:
         userFullName = request.session['sUserFullname']
-    usr = users.objects.get(name=request.session['sUserFullname'])
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
-            #retrieving the transactions object to populate the postObject field.
+            #retrieving the transactions object to populate the postObject field and the perpersoncost field
             transactionsObj = form.save()
+            # perpersoncost field
+            transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
+            transactionsObj.save()
+            # outdtanding field
+            involvedList = list(transactionsObj.users_involved.all())
+            if transactionsObj.user_paid in involvedList:
+                for anyUsr in involvedList:
+                    if anyUsr != transactionsObj.user_paid:
+                        anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
+                        anyUsr.save()
+                    else:
+                        transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount - transactionsObj.perpersoncost
+                        transactionsObj.user_paid.save()
+            else:
+                for anyUsr in involvedList:
+                    anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
+                    anyUsr.save()
+                transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount
+                transactionsObj.user_paid.save()
             postObject = PostsTable(
                             author=users.objects.get(name=userFullName),
                             desc='added transaction',
@@ -101,6 +120,7 @@ def create_transaction(request):     # {{{
                             PostType='noti',
                                     )
             postObject.save()
+            usr = users.objects.get(name=request.session['sUserFullname'])
             usr.lastNotification = postObject
             usr.save()
             for user in (transactionsObj.users_involved.all()):
@@ -110,32 +130,32 @@ def create_transaction(request):     # {{{
             return redirect('/displayTransactions/' + postObject.author.name + '/')
     else:
         form = transactionsForm()
-    try:
-        noOfNewNoti = PostsTable.objects.filter(
-                                                id__gt=users.objects.get(name=userFullName).lastNotification.id
-                                                ).filter(
-                                                PostType__exact='noti'
-                                                ).filter(
-                                                audience__in=[users.objects.get(name=userFullName).id]
-                                                ).count()
-    except:
-        if PostsTable.objects.count() > 0 and usr.lastNotification == None:
-            usr.lastNotification = PostsTable.objects.get(id=1)
-            usr.save()
-        noOfNewNoti = 0
-    try:
-        noOfNewPosts = PostsTable.objects.filter(
-                                                id__gt=users.objects.get(name=userFullName).lastPost.id
-                                                ).filter(
-                                                PostType__exact='post'
-                                                ).filter(
-                                                audience__in=[users.objects.get(name=userFullName).id]
-                                                ).count()
-    except:
-        if PostsTable.objects.count() > 0 and usr.lastPost == None:
-            usr.lastPost = PostsTable.objects.get(id=1)
-            usr.save()
-        noOfNewPosts = 0
+        try:
+            noOfNewNoti = PostsTable.objects.filter(
+                                                    id__gt=users.objects.get(name=userFullName).lastNotification.id
+                                                    ).filter(
+                                                    PostType__exact='noti'
+                                                    ).filter(
+                                                    audience__in=[users.objects.get(name=userFullName).id]
+                                                    ).count()
+        except:
+            if PostsTable.objects.count() > 0 and usr.lastNotification == None:
+                usr.lastNotification = PostsTable.objects.get(id=1)
+                usr.save()
+            noOfNewNoti = 0
+        try:
+            noOfNewPosts = PostsTable.objects.filter(
+                                                    id__gt=users.objects.get(name=userFullName).lastPost.id
+                                                    ).filter(
+                                                    PostType__exact='post'
+                                                    ).filter(
+                                                    audience__in=[users.objects.get(name=userFullName).id]
+                                                    ).count()
+        except:
+            if PostsTable.objects.count() > 0 and usr.lastPost == None:
+                usr.lastPost = PostsTable.objects.get(id=1)
+                usr.save()
+            noOfNewPosts = 0
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
 
@@ -292,11 +312,7 @@ def display_transactions(request, kind):   # {{{
     request.session['downloadData'] = list(newtable)
     # checking the url
     if cmp(kind, 'all') == 0:
-        if len(newtable) != 0:
-            for i, usr_row in enumerate(userstable):
-                usr_row.outstanding = newtable[len(newtable) - 1][6 + len(userstable) + i]
-                # update the user table with the latest values
-                usr_row.save()
+        pass
     # else get transctions of user alone
     else:
         currentUser = users.objects.get(name=kind)
@@ -344,6 +360,22 @@ def delete_transactions(request, txn_id):    # {{{
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.deleted = True
+        #outstanding field
+        involvedList = list(txnTOdelete.users_involved.all())
+        if txnTOdelete.user_paid in involvedList:
+            for anyUsr in involvedList:
+                if anyUsr != txnTOdelete.user_paid:
+                    anyUsr.outstanding = anyUsr.outstanding + txnTOdelete.perpersoncost
+                    anyUsr.save()
+                else:
+                    txnTOdelete.user_paid.outstanding = txnTOdelete.user_paid.outstanding - txnTOdelete.amount + txnTOdelete.perpersoncost
+                    txnTOdelete.user_paid.save()
+        else:
+            for anyUsr in involvedList:
+                anyUsr.outstanding = anyUsr.outstanding + txnTOdelete.perpersoncost
+                anyUsr.save()
+            txnTOdelete.user_paid.outstanding = txnTOdelete.user_paid.outstanding - txnTOdelete.amount
+            txnTOdelete.user_paid.save()
         txnTOdelete.save()
         postObject = PostsTable(
                         author=users.objects.get(name=userFullName),

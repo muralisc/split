@@ -89,6 +89,7 @@ def create_transaction(request):     # {{{
         return redirect('/')
     else:
         userFullName = request.session['sUserFullname']
+        loggedInUser = users.objects.get(name=request.session['sUserFullname'])
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
@@ -120,9 +121,8 @@ def create_transaction(request):     # {{{
                             PostType='noti',
                                     )
             postObject.save()
-            usr = users.objects.get(name=request.session['sUserFullname'])
-            usr.lastNotification = postObject
-            usr.save()
+            loggedInUser.lastNotification = postObject
+            loggedInUser.save()
             for user in (transactionsObj.users_involved.all()):
                 # should be added like this cause it need a primary id for ManyToManyField
                 postObject.audience.add(user)
@@ -139,9 +139,9 @@ def create_transaction(request):     # {{{
                                                     audience__in=[users.objects.get(name=userFullName).id]
                                                     ).count()
         except:
-            if PostsTable.objects.count() > 0 and usr.lastNotification == None:
-                usr.lastNotification = PostsTable.objects.get(id=1)
-                usr.save()
+            if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
+                loggedInUser.lastNotification = PostsTable.objects.get(id=1)
+                loggedInUser.save()
             noOfNewNoti = 0
         try:
             noOfNewPosts = PostsTable.objects.filter(
@@ -152,9 +152,9 @@ def create_transaction(request):     # {{{
                                                     audience__in=[users.objects.get(name=userFullName).id]
                                                     ).count()
         except:
-            if PostsTable.objects.count() > 0 and usr.lastPost == None:
-                usr.lastPost = PostsTable.objects.get(id=1)
-                usr.save()
+            if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
+                loggedInUser.lastPost = PostsTable.objects.get(id=1)
+                loggedInUser.save()
             noOfNewPosts = 0
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
                                      #}}}
@@ -162,25 +162,25 @@ def create_transaction(request):     # {{{
 
 def create_post(request):
     userFullName = request.session['sUserFullname']
-    usr = users.objects.get(name=request.session['sUserFullname'])
+    loggedInUser = users.objects.get(name=request.session['sUserFullname'])
     if request.method == 'POST':
-        form = PostsForm(usr, request.POST)
+        form = PostsForm(loggedInUser, request.POST)
         if form.is_valid():
             # we need to add the user data so we save the form without commit
             # so we get the obj to manipulate
             # http://stackoverflow.com/questions/7715263/whats-the-cleanest-way-to-add-arbitrary-data-to-modelform
             PostsTableObj = form.save(commit=False)
-            PostsTableObj.author = usr
+            PostsTableObj.author = loggedInUser
             PostsTableObj.PostType = 'post'
             PostsTableObj.save()
             form.save_m2m()
-            PostsTableObj.audience.add(usr)
+            PostsTableObj.audience.add(loggedInUser)
             # update user object
-            usr.lastPost = PostsTableObj
-            usr.save()
+            loggedInUser.lastPost = PostsTableObj
+            loggedInUser.save()
             return redirect('/displayPosts/all/')
     else:
-        form = PostsForm(usr)
+        form = PostsForm(loggedInUser)
     return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
 #========================================================
 
@@ -200,32 +200,32 @@ class DisplayNotifications(ListView):
     template_name = "display.html"
 
     def get_queryset(self):
-        usr = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                               '-timestamp'
                                               ).filter(
                                               PostType__exact='noti'
                                               ).filter(
-                                              audience__in=[usr.id]
+                                              audience__in=[loggedInUser.id]
                                               )
 
     def get_context_data(self, **kwargs):
-        usr = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
         context = super(DisplayNotifications, self).get_context_data(**kwargs)
-        if(usr.lastNotification):
+        if(loggedInUser.lastNotification):
             context['object_list_new'] = PostsTable.objects.filter(
-                                                        id__gt=usr.lastNotification.id
+                                                        id__gt=loggedInUser.lastNotification.id
                                                         ).filter(
                                                         PostType__exact='noti'
                                                         ).filter(
-                                                        audience__in=[usr.id]
+                                                        audience__in=[loggedInUser.id]
                                                         )
             context['noOfNewNoti'] = len(context['object_list_new'])
-        usr.lastNotification = PostsTable.objects.filter(
+        loggedInUser.lastNotification = PostsTable.objects.filter(
                                                 PostType__exact='noti'
                                                 ).latest('id')
-        usr.save()
+        loggedInUser.save()
         context['displayType'] = 'notifications'
         context['userFullName'] = self.request.session['sUserFullname']
         return context
@@ -235,31 +235,31 @@ class DisplayPosts(ListView):
     template_name = "display.html"
 
     def get_queryset(self):
-        usr = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                                 '-timestamp'
                                               ).filter(
                                                 PostType__exact='post'
                                               ).filter(
-                                              audience__in=[usr.id]
+                                              audience__in=[loggedInUser.id]
                                               )
 
     def get_context_data(self, **kwargs):
-        usr = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
         context = super(DisplayPosts, self).get_context_data(**kwargs)
-        if(usr.lastPost):
+        if(loggedInUser.lastPost):
             context['object_list_new'] = PostsTable.objects.filter(
-                                                        id__gt=usr.lastPost.id
+                                                        id__gt=loggedInUser.lastPost.id
                                                         ).filter(
                                                         PostType__exact='post'
                                                         ).filter(
-                                                        audience__in=[usr.id]
+                                                        audience__in=[loggedInUser.id]
                                                         )
-        usr.lastPost = PostsTable.objects.filter(
+        loggedInUser.lastPost = PostsTable.objects.filter(
                                                 PostType__exact='post'
                                                 ).latest('id')
-        usr.save()
+        loggedInUser.save()
         context['displayType'] = 'posts'
         context['userFullName'] = self.request.session['sUserFullname']
         return context

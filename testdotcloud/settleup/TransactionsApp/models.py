@@ -58,4 +58,7 @@ class PostsTable(models.Model):   # {{{
     linkToTransaction = models.ForeignKey(transactions, blank=True, null=True)
     PostType = models.CharField(max_length=10)
     deleted = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return str(self.id)
     # }}}

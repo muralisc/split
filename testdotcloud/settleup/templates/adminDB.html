@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row-fluid">
+    <div class="span10">
+        <!-- {{{ user display -->
+        <table class="table table-condensed table-bordered">
+            Users Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>username</th>
+                    <th>password</th>
+                    <th>email</th>
+                    <th>outstanding</th>
+                    <th>deleted</th>
+                    <th>lastLogin</th>
+                    <th>lastNotification</th>
+                    <th>lastPost</th>
+                    <th>groups</th>
+                </tr>
+            </thead>
+            {% for row in usersTable %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.username }}</td>
+                <td>{{ row.password }}</td>
+                <td>{{ row.email }}</td>
+                <td>{{ row.outstanding  }}</td>
+                <td>{{ row.deleted }}</td>
+                <td>{{ row.lastLogin }}</td>
+                <td>{{ row.lastNotification }}</td>
+                <td>{{ row.lastPost }}</td>
+                <td>{{ row.groups }}</td>
+                <td><a href="/editUser/{{ row.id }}/">edit</a></td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
+        <!-- {{{ transactions display -->
+        <table class="table table-condensed table-bordered">
+            transactions Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>description</th>
+                    <th>amount</th>
+                    <th>user_paid</th>
+                    <th>users_involved</th>
+                    <th>timestamp</th>
+                    <th>perpersoncost</th>
+                    <th>deleted</th>
+                    <th>groups</th>
+                </tr>
+            </thead>
+            {% for row in transactionsTable %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.description }}</td>
+                <td>{{ row.amount }}</td>
+                <td>{{ row.user_paid }}</td>
+                <td>{% for usr in row.users_involved.all %}{{ usr.name }},{% endfor %}</td>
+                <td>{{ row.timestamp  }}</td>
+                <td>{{ row.perpersoncost }}</td>
+                <td>{{ row.deleted }}</td>
+                <td>{{ row.group }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
+        <!-- {{{ posts display -->
+        <table class="table table-condensed table-bordered">
+            transactions Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>author</th>
+                    <th>timestamp</th>
+                    <th>audience</th>
+                    <th>linkToTransaction</th>
+                    <th>PostType</th>
+                    <th>deleted</th>
+                </tr>
+            </thead>
+            {% for row in postsTable %}
+            <tr>
+                <td>{{ row.author }}</td>
+                <td>{{ row.desc }}</td>
+                <td>{{ row.timestamp  }}</td>
+                <td>{% for usr in row.audience.all %}{{ usr.name }},{% endfor %}</td>
+                <td>{{ row.linkToTransaction }}</td>
+                <td>{{ row.PostType }}</td>
+                <td>{{ row.deleted }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
+    </div>
+</div>
+{% endblock %}

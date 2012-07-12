@@ -22,5 +22,7 @@ urlpatterns = patterns('',
     (r'^createPost/$', 'settleup.TransactionsApp.views.create_post'),
     (r'^download/$', 'settleup.TransactionsApp.views.download_as_csv'),
     (r'^calculator/(.*)/$', 'settleup.TransactionsApp.views.calculator'),
+    (r'^admin/$', 'settleup.adminApp.views.admin_view'),
+    (r'^editUser/(\d+)/$', 'settleup.adminApp.views.edit_user'),
 
 )

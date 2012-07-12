@@ -3,9 +3,10 @@ from django.shortcuts import render_to_response, redirect
 from django.views.generic import ListView
 from django.template import RequestContext
 from django.http import HttpResponse
+from django.forms.models import modelformset_factory
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
-from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm
+from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, EditUserForm
 # Python imports
 import urllib
 import csv
@@ -89,7 +90,6 @@ def create_transaction(request):     # {{{
         return redirect('/')
     else:
         userFullName = request.session['sUserFullname']
-        loggedInUser = users.objects.get(name=request.session['sUserFullname'])
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
@@ -99,7 +99,7 @@ def create_transaction(request):     # {{{
             transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
             transactionsObj.save()
             # outdtanding field
-            involvedList = list(transactionsObj.users_involved.all())
+            involvedList = list(transactionsObj.users_involved.all())    # change to Queryset and collectively save the instances
             if transactionsObj.user_paid in involvedList:
                 for anyUsr in involvedList:
                     if anyUsr != transactionsObj.user_paid:
@@ -121,6 +121,9 @@ def create_transaction(request):     # {{{
                             PostType='noti',
                                     )
             postObject.save()
+            # 'loggedinuser' is put here because it interfears with the save
+            # operation at updating the user objects outstanding field
+            loggedInUser = users.objects.get(name=request.session['sUserFullname'])
             loggedInUser.lastNotification = postObject
             loggedInUser.save()
             for user in (transactionsObj.users_involved.all()):
@@ -129,6 +132,7 @@ def create_transaction(request):     # {{{
             postObject.audience.add(transactionsObj.user_paid)
             return redirect('/displayTransactions/' + postObject.author.name + '/')
     else:
+        loggedInUser = users.objects.get(name=request.session['sUserFullname'])
         form = transactionsForm()
         try:
             noOfNewNoti = PostsTable.objects.filter(
@@ -222,9 +226,12 @@ class DisplayNotifications(ListView):
                                                         audience__in=[loggedInUser.id]
                                                         )
             context['noOfNewNoti'] = len(context['object_list_new'])
-        loggedInUser.lastNotification = PostsTable.objects.filter(
-                                                PostType__exact='noti'
-                                                ).latest('id')
+        try:
+            loggedInUser.lastNotification = PostsTable.objects.filter(
+                                                    PostType__exact='noti'
+                                                    ).latest('id')
+        except PostsTable.DoesNotExist:
+            pass
         loggedInUser.save()
         context['displayType'] = 'notifications'
         context['userFullName'] = self.request.session['sUserFullname']
@@ -256,9 +263,12 @@ class DisplayPosts(ListView):
                                                         ).filter(
                                                         audience__in=[loggedInUser.id]
                                                         )
-        loggedInUser.lastPost = PostsTable.objects.filter(
-                                                PostType__exact='post'
-                                                ).latest('id')
+        try:
+            loggedInUser.lastPost = PostsTable.objects.filter(
+                                                    PostType__exact='post'
+                                                    ).latest('id')
+        except PostsTable.DoesNotExist:
+            pass
         loggedInUser.save()
         context['displayType'] = 'posts'
         context['userFullName'] = self.request.session['sUserFullname']
@@ -463,6 +473,9 @@ def fetch_quote(request):  # {{{
 
 
 # TODO consolidate the database
+# create a logs table
+# create a verify script or incorporate it with the database. thingy
+# user settings
 
 def download_as_csv(request):
     if 'downloadData' in request.session:
@@ -489,3 +502,30 @@ def calculator(request, exp):
     if error != [""] and error != ['0'] and error != ['4']:
         result = error
     return HttpResponse(result)
+
+
+def admin_view(request):
+    # usersTableFormset = modelformset_factory(users, form=addUserForm)
+    # usersTable = usersTableFormset()
+    usersTable = users.objects.all()
+    transactionsTable = transactions.objects.all()
+    postsTable = PostsTable.objects.order_by('PostType')
+    return render_to_response('adminDB.html', locals(), context_instance=RequestContext(request))
+
+
+def edit_user(request, usr_id):                    # {{{
+    # checking if logged in
+    if 'sUserFullname' not in request.session:
+        pass
+    else:
+        userFullName = request.session['sUserFullname']
+    usrToEdit = users.objects.get(id=usr_id)
+    form = EditUserForm(request.POST or None, instance=usrToEdit)
+    if request.method == 'POST':
+        if form.is_valid():
+                form.save()
+                return redirect('/admin')
+        else:
+            pass
+    return render_to_response('editUser.html', locals(), context_instance=RequestContext(request))
+                                         #}}}

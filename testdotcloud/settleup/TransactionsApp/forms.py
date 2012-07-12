@@ -40,6 +40,22 @@ class addUserForm(forms.ModelForm):  # {{{
         #}}}
 
 
+class EditUserForm(forms.ModelForm):  # {{{
+    class Meta:
+        model = users
+        exclude = (
+                'deleted',
+                'lastLogin',
+                'lastNotification',
+                'lastPost',
+                'groups',
+                )
+        widgets = {
+                'password': forms.PasswordInput(),
+                }
+        #}}}
+
+
 class PostsForm(forms.ModelForm):
     def __init__(self, usr, *args, **kwargs):
         super(PostsForm, self).__init__(*args, **kwargs)

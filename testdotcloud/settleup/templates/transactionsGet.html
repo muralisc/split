@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block cur_title  %}
+Create Transaction
+{% endblock %}
 {% block current_head %}
 <script type="text/javascript">
     $(document).ready(function() {
@@ -36,7 +39,7 @@
         <div class="span1"></div>
         <div class="span8">
             {% ifnotequal  noOfNewNoti 0 %}
-            <a href="/notifications/all/"> {{ noOfNewNoti }} new transaction added involving you</a></br>
+            <a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
             {% endifnotequal %}
             {% ifnotequal  noOfNewPosts 0 %}
             <a href="/displayPosts/all/"> {{ noOfNewPosts }} new Posts for you</a>

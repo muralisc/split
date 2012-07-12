@@ -1,5 +1,8 @@
 <!-- Template for generating "user delete" and "template delete" pages -->
 {% extends "base.html" %}
+{% block cur_title  %}
+delete {{ deleteType }}
+{% endblock %}
 {% block content %}
 <div class="row-fluid">
     <div class="span2">

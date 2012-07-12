@@ -16,7 +16,7 @@ import random
 
 def login(request):  # {{{
     try:
-        if request.session.get('sUserFullname', False):
+        if request.session.get('sUserId', False):
             return redirect('/createTransaction')
     except KeyError:
         pass
@@ -30,7 +30,7 @@ def login(request):  # {{{
             if memberQuerySet.count() == 0:
                 loginMessage = "Invalid username or password"
             else:
-                request.session['sUserFullname'] = memberQuerySet[0].name
+                request.session['sUserId'] = memberQuerySet[0].id
                 return redirect('/createTransaction')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
@@ -38,17 +38,17 @@ def login(request):  # {{{
 
 
 def logout(request):  # {{{
-    del request.session['sUserFullname']
+    del request.session['sUserId']
     return redirect('/')
     #}}}
 
 
 def create_user(request):                    # {{{
     # checking if logged in
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         pass
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
@@ -86,10 +86,10 @@ def create_transaction(request):     # {{{
     makes and entry in the Posts table
     updates outstanding column in usertable
     """
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
@@ -115,7 +115,7 @@ def create_transaction(request):     # {{{
                 transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount
                 transactionsObj.user_paid.save()
             postObject = PostsTable(
-                            author=users.objects.get(name=userFullName),
+                            author=users.objects.get(pk=request.session['sUserId']),
                             desc='added transaction',
                             linkToTransaction=transactions.objects.latest('timestamp'),
                             PostType='noti',
@@ -123,7 +123,7 @@ def create_transaction(request):     # {{{
             postObject.save()
             # 'loggedinuser' is put here because it interfears with the save
             # operation at updating the user objects outstanding field
-            loggedInUser = users.objects.get(name=request.session['sUserFullname'])
+            loggedInUser = users.objects.get(pk=request.session['sUserId'])
             loggedInUser.lastNotification = postObject
             loggedInUser.save()
             for user in (transactionsObj.users_involved.all()):
@@ -132,15 +132,15 @@ def create_transaction(request):     # {{{
             postObject.audience.add(transactionsObj.user_paid)
             return redirect('/displayTransactions/' + postObject.author.name + '/')
     else:
-        loggedInUser = users.objects.get(name=request.session['sUserFullname'])
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
         form = transactionsForm()
         try:
             noOfNewNoti = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(name=userFullName).lastNotification.id
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id
                                                     ).filter(
                                                     PostType__exact='noti'
                                                     ).filter(
-                                                    audience__in=[users.objects.get(name=userFullName).id]
+                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
@@ -149,11 +149,11 @@ def create_transaction(request):     # {{{
             noOfNewNoti = 0
         try:
             noOfNewPosts = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(name=userFullName).lastPost.id
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastPost.id
                                                     ).filter(
                                                     PostType__exact='post'
                                                     ).filter(
-                                                    audience__in=[users.objects.get(name=userFullName).id]
+                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
@@ -165,8 +165,8 @@ def create_transaction(request):     # {{{
 
 
 def create_post(request):
-    userFullName = request.session['sUserFullname']
-    loggedInUser = users.objects.get(name=request.session['sUserFullname'])
+    userFullName = users.objects.get(pk=request.session['sUserId']).name
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if request.method == 'POST':
         form = PostsForm(loggedInUser, request.POST)
         if form.is_valid():
@@ -190,10 +190,10 @@ def create_post(request):
 
 
 def display_users(request):              # {{{
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     usersDBrows = users.objects.all()
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
@@ -204,7 +204,7 @@ class DisplayNotifications(ListView):
     template_name = "display.html"
 
     def get_queryset(self):
-        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                               '-timestamp'
@@ -215,7 +215,7 @@ class DisplayNotifications(ListView):
                                               )
 
     def get_context_data(self, **kwargs):
-        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
         context = super(DisplayNotifications, self).get_context_data(**kwargs)
         if(loggedInUser.lastNotification):
             context['object_list_new'] = PostsTable.objects.filter(
@@ -234,7 +234,7 @@ class DisplayNotifications(ListView):
             pass
         loggedInUser.save()
         context['displayType'] = 'notifications'
-        context['userFullName'] = self.request.session['sUserFullname']
+        context['userFullName'] = users.objects.get(pk=self.request.session['sUserId']).name
         return context
 
 
@@ -242,7 +242,7 @@ class DisplayPosts(ListView):
     template_name = "display.html"
 
     def get_queryset(self):
-        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
         if(self.args[0] == 'all'):
             return PostsTable.objects.order_by(
                                                 '-timestamp'
@@ -253,7 +253,7 @@ class DisplayPosts(ListView):
                                               )
 
     def get_context_data(self, **kwargs):
-        loggedInUser = users.objects.get(name=self.request.session['sUserFullname'])
+        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
         context = super(DisplayPosts, self).get_context_data(**kwargs)
         if(loggedInUser.lastPost):
             context['object_list_new'] = PostsTable.objects.filter(
@@ -271,15 +271,15 @@ class DisplayPosts(ListView):
             pass
         loggedInUser.save()
         context['displayType'] = 'posts'
-        context['userFullName'] = self.request.session['sUserFullname']
+        context['userFullName'] = users.objects.get(pk=self.request.session['sUserId']).name
         return context
 
 
 def display_transactions(request, kind):   # {{{
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     userstable = users.objects.all()
     txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
@@ -363,10 +363,10 @@ def display_transactions(request, kind):   # {{{
 
 
 def delete_transactions(request, txn_id):    # {{{
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.deleted = True
@@ -388,7 +388,7 @@ def delete_transactions(request, txn_id):    # {{{
             txnTOdelete.user_paid.save()
         txnTOdelete.save()
         postObject = PostsTable(
-                        author=users.objects.get(name=userFullName),
+                        author=users.objects.get(pk=request.session['sUserId']),
                         desc='deleted transaction',
                         linkToTransaction=transactions.objects.get(id=txn_id),
                         PostType='noti',
@@ -405,10 +405,10 @@ def delete_transactions(request, txn_id):    # {{{
 
 
 def delete_user(request, usr_id):  # {{{
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     if(int(usr_id) >= 0):
         usrTOdelete = users.objects.get(id=usr_id)
         usrTOdelete.delete()
@@ -419,10 +419,10 @@ def delete_user(request, usr_id):  # {{{
 
 
 def settle_grp(request):  # {{{
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = request.session['sUserFullname']
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
     usersDBrows = users.objects.order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
@@ -504,28 +504,19 @@ def calculator(request, exp):
     return HttpResponse(result)
 
 
-def admin_view(request):
-    # usersTableFormset = modelformset_factory(users, form=addUserForm)
-    # usersTable = usersTableFormset()
-    usersTable = users.objects.all()
-    transactionsTable = transactions.objects.all()
-    postsTable = PostsTable.objects.order_by('PostType')
-    return render_to_response('adminDB.html', locals(), context_instance=RequestContext(request))
-
-
-def edit_user(request, usr_id):                    # {{{
+def user_settings(request):                    # {{{
     # checking if logged in
     if 'sUserFullname' not in request.session:
         pass
     else:
-        userFullName = request.session['sUserFullname']
-    usrToEdit = users.objects.get(id=usr_id)
-    form = EditUserForm(request.POST or None, instance=usrToEdit)
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    usrToEdit = users.objects.get(id=request.session['sUserId'])
+    form = addUserForm(request.POST or None, instance=usrToEdit)
     if request.method == 'POST':
         if form.is_valid():
                 form.save()
                 return redirect('/admin')
         else:
             pass
-    return render_to_response('editUser.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('addUser.html', locals(), context_instance=RequestContext(request))
                                          #}}}

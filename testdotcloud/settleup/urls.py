@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
-from TransactionsApp.views import DisplayNotifications, DisplayPosts
+from TransactionsApp.views import DisplayPosts
 
 
 # Uncomment the next two lines to enable the admin:
@@ -18,7 +18,7 @@ urlpatterns = patterns('',
     (r'^settleUP/$', 'settleup.TransactionsApp.views.settle_grp'),
     (r'^fetchquote/$', 'settleup.TransactionsApp.views.fetch_quote'),
     (r'^logout/$', 'settleup.TransactionsApp.views.logout'),
-    (r'^notifications/(\w+)/$', DisplayNotifications.as_view()),
+    (r'^notifications/(\w+)/$', 'settleup.TransactionsApp.views.display_notifications'),
     (r'^displayPosts/(\w+)/$', DisplayPosts.as_view()),
     (r'^createPost/$', 'settleup.TransactionsApp.views.create_post'),
     (r'^download/$', 'settleup.TransactionsApp.views.download_as_csv'),

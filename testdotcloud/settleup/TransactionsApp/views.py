@@ -202,42 +202,37 @@ def display_users(request):              # {{{
     #}}}
 
 
-class DisplayNotifications(ListView):
-    template_name = "display.html"
-
-    def get_queryset(self):
-        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
-        if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by(
-                                              '-timestamp'
-                                              ).filter(
-                                              PostType__exact='noti'
-                                              ).filter(
-                                              audience__in=[loggedInUser.id]
-                                              )
-
-    def get_context_data(self, **kwargs):
-        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
-        context = super(DisplayNotifications, self).get_context_data(**kwargs)
-        if(loggedInUser.lastNotification):
-            context['object_list_new'] = PostsTable.objects.filter(
-                                                        id__gt=loggedInUser.lastNotification.id
-                                                        ).filter(
-                                                        PostType__exact='noti'
-                                                        ).filter(
-                                                        audience__in=[loggedInUser.id]
-                                                        )
-            context['noOfNewNoti'] = len(context['object_list_new'])
-        try:
-            loggedInUser.lastNotification = PostsTable.objects.filter(
-                                                    PostType__exact='noti'
-                                                    ).latest('id')
-        except PostsTable.DoesNotExist:
-            pass
-        loggedInUser.save()
-        context['displayType'] = 'notifications'
-        context['userFullName'] = users.objects.get(pk=self.request.session['sUserId']).name
-        return context
+def display_notifications(request, *args):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    if(args[0] == 'all'):
+        object_list = PostsTable.objects.order_by(
+                                            '-timestamp'
+                                            ).filter(
+                                            PostType__exact='noti'
+                                            ).filter(
+                                            audience__in=[loggedInUser.id]
+                                            )
+    if(loggedInUser.lastNotification):
+        object_list_new = PostsTable.objects.filter(
+                                            id__gt=loggedInUser.lastNotification.id
+                                            ).filter(
+                                            PostType__exact='noti'
+                                            ).filter(
+                                            audience__in=[loggedInUser.id]
+                                            )
+        noOfNewNoti = len(object_list_new)
+    try:
+        loggedInUser.lastNotification = PostsTable.objects.filter(
+                                                PostType__exact='noti'
+                                                ).latest('id')
+    except PostsTable.DoesNotExist:
+        pass
+    loggedInUser.save()
+    displayType = 'notifications'
+    userFullName = users.objects.get(pk=request.session['sUserId']).name
+    return render_to_response('display.html', locals(), context_instance=RequestContext(request))
 
 
 class DisplayPosts(ListView):

@@ -45,18 +45,18 @@ def logout(request):  # {{{
 
 def create_user(request):                    # {{{
     # checking if logged in
-    if 'sUserId' not in request.session:
-        pass
-    else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    if request.session.get('sUserId', False):
+        return redirect('/createTransaction')
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
+            # if another user with the same username does not exist
             if users.objects.filter(username__exact=form.cleaned_data['username']).count() == 0:
                 form.cleaned_data['outstanding'] = 0
                 currentUserObject = form.save(commit=False)
                 currentUserObject.outstanding = 0
                 try:
+                    # assign the latest notification
                     currentUserObject.lastNotification = PostsTable.objects.filter(
                                                             PostType__exact='noti'
                                                             ).latest('id')
@@ -165,6 +165,8 @@ def create_transaction(request):     # {{{
 
 
 def create_post(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
     userFullName = users.objects.get(pk=request.session['sUserId']).name
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if request.method == 'POST':

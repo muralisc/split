@@ -93,13 +93,13 @@ def create_transaction(request):     # {{{
     if request.method == 'POST':
         form = transactionsForm(request.POST)
         if form.is_valid():
-            #retrieving the transactions object to populate the postObject field and the perpersoncost field
+            # retrieving the transactions object to populate the postObject field and the perpersoncost field
             transactionsObj = form.save()
             # perpersoncost field
             transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
             transactionsObj.save()
             # outdtanding field
-            involvedList = list(transactionsObj.users_involved.all())    # change to Queryset and collectively save the instances
+            involvedList = list(transactionsObj.users_involved.all())
             if transactionsObj.user_paid in involvedList:
                 for anyUsr in involvedList:
                     if anyUsr != transactionsObj.user_paid:

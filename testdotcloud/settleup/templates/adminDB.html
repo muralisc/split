@@ -4,6 +4,12 @@ Admin Page
 {% endblock %}
 {% block content %}
 <div class="row-fluid">
+<div class="span2">
+<ul class="nav nav-list">
+    <li><a id="" href='/admin'><i class="icon-share-alt"></i>Admin Home</a></li>
+    <li><a href="/deleteUser/-1"><i class="icon-remove"></i>Delete Users</a></li>
+</ul>
+    </div>
     <div class="span10">
         <!-- {{{ user display -->
         <table class="table table-condensed table-bordered">
@@ -36,7 +42,7 @@ Admin Page
                 <td>{{ row.lastNotification }}</td>
                 <td>{{ row.lastPost }}</td>
                 <td>{{ row.groups }}</td>
-                <td><a href="/editUser/{{ row.id }}/">edit</a></td>
+                <td><a href="/admin/editUser/{{ row.id }}/">edit</a></td>
             </tr>
             {% endfor%}
         </table>

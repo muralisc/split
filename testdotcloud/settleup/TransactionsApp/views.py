@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.forms.models import modelformset_factory
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
-from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, EditUserForm
+from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm
 # Python imports
 import urllib
 import csv
@@ -31,7 +31,10 @@ def login(request):  # {{{
                 loginMessage = "Invalid username or password"
             else:
                 request.session['sUserId'] = memberQuerySet[0].id
-                return redirect('/createTransaction')
+                if memberQuerySet[0].name == 'admin':
+                    return redirect('/admin')
+                else:
+                    return redirect('/createTransaction')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -196,7 +199,7 @@ def display_users(request):              # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.all()
+    usersDBrows = users.objects.filter(deleted__exact=False)
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -277,7 +280,7 @@ def display_transactions(request, kind):   # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    userstable = users.objects.all()
+    userstable = users.objects.filter(deleted__exact=False)
     txnstable = transactions.objects.filter(deleted__exact=False)
     rows = {}
     for i in userstable:
@@ -350,7 +353,7 @@ def display_transactions(request, kind):   # {{{
                 t.append(i[5 + userpos + usercount])
                 newtable.append(t)
     # a ordered_userstable variable for link display in order
-    ordered_userstable = users.objects.order_by('-outstanding')
+    ordered_userstable = users.objects.filter(deleted__exact=False).order_by('-outstanding')
     for i, I in enumerate(newtable):
         I[0] = i
     newtable.reverse()
@@ -401,15 +404,26 @@ def delete_transactions(request, txn_id):    # {{{
         # }}}
 
 
-def delete_user(request, usr_id):  # {{{
-    if 'sUserId' not in request.session:
-        return redirect('/')
+def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding field
+    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
+        pass
     else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
+        return redirect('/')
     if(int(usr_id) >= 0):
         usrTOdelete = users.objects.get(id=usr_id)
-        usrTOdelete.delete()
-    usersDBrows = users.objects.all()
+        usrTOdelete.deleted = True
+        usrTOdelete.save()
+        # get txns of involved
+        txns = usrTOdelete.transactions_set1.all()
+        # get txns of paid
+        txns1 = usrTOdelete.transactions_set.all()
+        for tmp in txns:
+            tmp.deleted = True
+            tmp.save()
+        for tmp in txns1:
+            tmp.deleted = True
+            tmp.save()
+    usersDBrows = users.objects.filter(deleted__exact=False)
     deleteType = 'users'
     return render_to_response('delete.html', locals(), context_instance=RequestContext(request))  # }}}
      #}}}
@@ -420,7 +434,7 @@ def settle_grp(request):  # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.order_by('-outstanding')
+    usersDBrows = users.objects.filter(deleted__exact=False).order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
     for i in usersDBrows:
@@ -481,7 +495,7 @@ def download_as_csv(request):
         response['Content-Disposition'] = 'attachment; filename=somefilename.csv'
         newtable = request.session['downloadData']
         del request.session['downloadData']
-        userstable = list(users.objects.all())
+        userstable = list(users.objects.filter(deleted__exact=False).all())
         writer = csv.writer(response)
         writer.writerow(["id", "DESCRIPTION", "AMOUNT", "PAID BY", "PAID FOR", "TIME"] + userstable + userstable)
         for i in range(len(newtable)):
@@ -501,19 +515,24 @@ def calculator(request, exp):
     return HttpResponse(result)
 
 
-def user_settings(request):                    # {{{
+def user_password_change(request):                    # {{{
     # checking if logged in
-    if 'sUserFullname' not in request.session:
+    if 'sUserId' not in request.session:
         pass
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     usrToEdit = users.objects.get(id=request.session['sUserId'])
-    form = addUserForm(request.POST or None, instance=usrToEdit)
+    form = PasswordChangeForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
-                form.save()
-                return redirect('/admin')
+            if usrToEdit.password == form.cleaned_data['oldPassword']:
+                usrToEdit.password = form.cleaned_data['newPassword']
+                usrToEdit.save()
+                return redirect('/')  # TODO go to user profile
+            else:
+                userPrompt = "wrong old password"
         else:
+
             pass
-    return render_to_response('addUser.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('userPasswordChange.html', locals(), context_instance=RequestContext(request))
                                          #}}}

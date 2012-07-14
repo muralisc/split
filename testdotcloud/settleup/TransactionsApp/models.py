@@ -17,6 +17,8 @@ class users(models.Model):    # {{{
     password = models.CharField(max_length=50)
     email = models.EmailField(max_length=30)
     outstanding = models.FloatField(blank=True, null=True)
+    # deleting users is a complex operation. once delted cannot be retrievd
+    # back so remove this field TODO
     deleted = models.BooleanField(default=False)
     lastLogin = models.DateTimeField(auto_now_add=True)
     # PostsTable is in Quotes becase its declared down

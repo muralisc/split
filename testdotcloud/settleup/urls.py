@@ -9,7 +9,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     (r'^$', 'settleup.TransactionsApp.views.login'),
     (r'^createUser/$', 'settleup.TransactionsApp.views.create_user'),
-    (r'^userSettings/$', 'settleup.TransactionsApp.views.user_settings'),
+    (r'^changePassword/$', 'settleup.TransactionsApp.views.user_password_change'),
     (r'^displayusers/$', 'settleup.TransactionsApp.views.display_users'),
     (r'^createTransaction/$', 'settleup.TransactionsApp.views.create_transaction'),
     (r'^displayTransactions/(\w+)/$', 'settleup.TransactionsApp.views.display_transactions'),
@@ -24,6 +24,6 @@ urlpatterns = patterns('',
     (r'^download/$', 'settleup.TransactionsApp.views.download_as_csv'),
     (r'^calculator/(.*)/$', 'settleup.TransactionsApp.views.calculator'),
     (r'^admin/$', 'settleup.adminApp.views.admin_view'),
-    (r'^editUser/(\d+)/$', 'settleup.adminApp.views.edit_user'),
+    (r'^admin/editUser/(\d+)/$', 'settleup.adminApp.views.edit_user'),
 
 )

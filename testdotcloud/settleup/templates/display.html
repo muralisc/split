@@ -1,7 +1,7 @@
 <!-- Template for generating "user display" and "notification/posts display" pages -->
 {% extends "base.html" %}
 {% block cur_title  %}
-Dispaly {{ displayType }}
+Display {{ displayType }}
 {% endblock %}
 {% block content %}
 <div class="row-fluid">
@@ -77,7 +77,7 @@ Dispaly {{ displayType }}
                 </tr>
                 {% endfor %}
             </table>
-            <h3>old posts</h3>
+            <h3>all posts</h3>
             <table class="table table-striped">
                 {% for row in object_list %}
                 <tr>

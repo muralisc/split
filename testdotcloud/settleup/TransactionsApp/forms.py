@@ -8,6 +8,11 @@ class loginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
+class PasswordChangeForm(forms.Form):
+    oldPassword = forms.CharField(widget=forms.PasswordInput)
+    newPassword = forms.CharField(widget=forms.PasswordInput)
+
+
 class transactionsForm(forms.ModelForm):   # {{{
     class Meta:
         model = transactions
@@ -28,22 +33,6 @@ class addUserForm(forms.ModelForm):  # {{{
         model = users
         exclude = (
                 'outstanding',
-                'deleted',
-                'lastLogin',
-                'lastNotification',
-                'lastPost',
-                'groups',
-                )
-        widgets = {
-                'password': forms.PasswordInput(),
-                }
-        #}}}
-
-
-class EditUserForm(forms.ModelForm):  # {{{
-    class Meta:
-        model = users
-        exclude = (
                 'deleted',
                 'lastLogin',
                 'lastNotification',

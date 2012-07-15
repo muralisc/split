@@ -20,7 +20,7 @@ class users(models.Model):    # {{{
     # deleting users is a complex operation. once delted cannot be retrievd
     # back so remove this field TODO
     deleted = models.BooleanField(default=False)
-    lastLogin = models.DateTimeField(auto_now_add=True)
+    lastLogin = models.DateTimeField()
     # PostsTable is in Quotes becase its declared down
     lastNotification = models.ForeignKey('PostsTable', blank=True, null=True, related_name='users_lastNotification')
     lastPost = models.ForeignKey('PostsTable', blank=True, null=True, related_name='users_lastPost')

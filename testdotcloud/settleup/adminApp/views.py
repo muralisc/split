@@ -11,7 +11,7 @@ def admin_view(request):
         userFullName = 'admin'
     else:
         return redirect('/')
-    usersTable = users.objects.all()
+    usersTable = users.objects.order_by('-lastLogin')
     transactionsTable = transactions.objects.all()
     postsTable = PostsTable.objects.order_by('PostType')
     return render_to_response('adminDB.html', locals(), context_instance=RequestContext(request))
@@ -32,3 +32,15 @@ def edit_user(request, usr_id):                    # {{{
             pass
     return render_to_response('adminEditUser.html', locals(), context_instance=RequestContext(request))
                                          #}}}
+                                         
+                                         
+def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding field
+    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
+        pass
+    else:
+        return redirect('/')
+    if(int(usr_id) >= 0):
+        usrTOdelete = users.objects.get(id=usr_id)
+        usrTOdelete.delete()
+    return redirect('/admin')
+     #}}}

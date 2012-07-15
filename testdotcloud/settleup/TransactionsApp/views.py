@@ -12,6 +12,7 @@ import urllib
 import csv
 import re
 import random
+import datetime
 
 
 def login(request):  # {{{
@@ -31,6 +32,9 @@ def login(request):  # {{{
                 loginMessage = "Invalid username or password"
             else:
                 request.session['sUserId'] = memberQuerySet[0].id
+                loggedInUser = memberQuerySet[0]
+                loggedInUser.lastLogin = datetime.datetime.now()
+                loggedInUser.save()
                 if memberQuerySet[0].name == 'admin':
                     return redirect('/admin')
                 else:
@@ -71,6 +75,7 @@ def create_user(request):                    # {{{
                                                             ).latest('id')
                 except:
                     currentUserObject.lastPost = None
+                    currentUserObject.lastLogin = datetime.datetime.now()
                 currentUserObject.save()
                 createUserPrompt = "User added.Login to continue"
             else:
@@ -167,7 +172,7 @@ def create_transaction(request):     # {{{
                                      #}}}
 
 
-def create_post(request):
+def create_post(request):   # {{{
     if 'sUserId' not in request.session:
         return redirect('/')
     userFullName = users.objects.get(pk=request.session['sUserId']).name
@@ -191,6 +196,7 @@ def create_post(request):
     else:
         form = PostsForm(loggedInUser)
     return render_to_response('getPost.html', locals(), context_instance=RequestContext(request))
+        # }}}
 #========================================================
 
 
@@ -199,13 +205,15 @@ def display_users(request):              # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.filter(deleted__exact=False)
+    usersDBrows = users.objects.filter(deleted__exact=False).filter(
+                                                    ~Q(name__exact='admin')
+                                                    )
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
 
 
-def display_notifications(request, *args):
+def display_notifications(request, *args):    # {{{
     if 'sUserId' not in request.session:
         return redirect('/')
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
@@ -236,6 +244,7 @@ def display_notifications(request, *args):
     displayType = 'notifications'
     userFullName = users.objects.get(pk=request.session['sUserId']).name
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
+            # }}}
 
 
 class DisplayPosts(ListView):  # {{{
@@ -405,31 +414,6 @@ def delete_transactions(request, txn_id):    # {{{
         # }}}
 
 
-def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding field
-    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
-        pass
-    else:
-        return redirect('/')
-    if(int(usr_id) >= 0):
-        usrTOdelete = users.objects.get(id=usr_id)
-        usrTOdelete.deleted = True
-        usrTOdelete.save()
-        # get txns of involved
-        txns = usrTOdelete.transactions_set1.all()
-        # get txns of paid
-        txns1 = usrTOdelete.transactions_set.all()
-        for tmp in txns:
-            tmp.deleted = True
-            tmp.save()
-        for tmp in txns1:
-            tmp.deleted = True
-            tmp.save()
-    usersDBrows = users.objects.filter(deleted__exact=False)
-    deleteType = 'users'
-    return render_to_response('adminDeleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
-     #}}}
-
-
 def settle_grp(request):  # {{{
     if 'sUserId' not in request.session:
         return redirect('/')
@@ -489,7 +473,7 @@ def fetch_quote(request):  # {{{
 # create a verify script or incorporate it with the database. thingy
 # user settings
 
-def download_as_csv(request):
+def download_as_csv(request):   # {{{
     if 'downloadData' in request.session:
         # Create the HttpResponse object with the appropriate CSV header.
         response = HttpResponse(mimetype='text/csv')
@@ -504,9 +488,10 @@ def download_as_csv(request):
         return response
     else:
         return redirect('/displayTransactions/all/')
+            # }}}
 
 
-def calculator(request, exp):
+def calculator(request, exp):       # {{{
     response = urllib.urlopen('http://www.google.com/ig/calculator?q=' + urllib.quote(exp))
     html = response.read()
     error = re.findall(r'error: "(.*?)"', html)
@@ -514,6 +499,7 @@ def calculator(request, exp):
     if error != [""] and error != ['0'] and error != ['4']:
         result = error
     return HttpResponse(result)
+        # }}}
 
 
 def user_password_change(request):                    # {{{

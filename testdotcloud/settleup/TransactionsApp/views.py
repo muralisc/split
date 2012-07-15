@@ -299,7 +299,7 @@ def display_transactions(request, kind):   # {{{
         rows.update({i.username: 0})
     table = [dict(rows) for k in range(txnstable.count())]
     i = 0
-    # fetch each database row
+    # fetch each transaction database row
     for i, curtxn in enumerate(txnstable):
         if i == 0:
             table[i][curtxn.user_paid.username] += curtxn.amount
@@ -317,7 +317,7 @@ def display_transactions(request, kind):   # {{{
         for j, J in enumerate(userstable):
             if i == 0:
                 newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = table[i][J.username]
+                newtable[i][j + len(userstable) + 6] = table[i][J.username] + J.outstanding
             else:
                 newtable[i][j + 6] = table[i][J.username]
                 newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
@@ -368,6 +368,10 @@ def display_transactions(request, kind):   # {{{
     for i, I in enumerate(newtable):
         I[0] = i
     newtable.reverse()
+    # integrity checks
+    sumOfAllOutstanding = 0
+    for j in userstable:
+        sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
     return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
                                                   #}}}
 #========================================================

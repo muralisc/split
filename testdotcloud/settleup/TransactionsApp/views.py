@@ -208,7 +208,7 @@ def display_users(request):              # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.filter(deleted__exact=False)
+    usersDBrows = users.objects.filter(deleted__exact=False).order_by("-outstanding")
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -496,7 +496,8 @@ def calculator(request, exp):       # {{{
     response = urllib.urlopen('http://www.google.com/ig/calculator?q=' + urllib.quote(exp))
     html = response.read()
     error = re.findall(r'error: "(.*?)"', html)
-    result = re.findall(r'rhs: "([\d.]+)"', html)
+    result = re.findall(r'rhs: "(.*?)"', html)
+    result = re.sub('\xa0','',result[0])
     if error != [""] and error != ['0'] and error != ['4']:
         result = error
     return HttpResponse(result)

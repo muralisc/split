@@ -9,7 +9,7 @@ Display {{ displayType }}
         {% include "navlist.html"%}
     </div>
     <div class="span10">
-<!-- {{{ user display -->
+        <!-- {{{ user display -->
         {% if displayType == 'users' %}
         <table class="table">
             <thead>
@@ -28,62 +28,78 @@ Display {{ displayType }}
             {% endfor%}
         </table>
         {% endif %}
-<!-- }}} -->
-<!-- {{{ notifications display-->
+        <!-- }}} -->
+        <!-- {{{ notifications display -->
         {% if displayType == 'notifications' %}
-            <table class="table">
-                {% for row in object_list_new %}
-                <tr>
-                    <td>
-                        {{ row.author|upper }}
-                        {{ row.desc }}->
-                        <b>{{ row.linkToTransaction.amount }}</b> paid by 
-                        {{ row.linkToTransaction.user_paid|upper }} for
-                        {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
-                    </td>
-                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            <h3>All notifications</h3>
-            <table class="table table-striped">
-                {% for row in object_list %}
-                <tr>
-                    <td>
-                        {{ row.author|upper }}
-                        {{ row.desc }}->
-                        <b>{{ row.linkToTransaction.amount }}</b> paid by 
-                        {{ row.linkToTransaction.user_paid|upper }} for
-                        {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
-                    </td>
-                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+        <table class="table">
+            {% for row in object_list_new %}
+            <tr>
+                <td>
+                    {{ row.author|upper }}
+                    {{ row.desc }}:
+                    <b>{{ row.linkToTransaction.amount }}</b> paid by 
+                    {{ row.linkToTransaction.user_paid|upper }} for
+                    {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                </td>
+                <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h3>All notifications</h3>
+        <table class="table table-striped">
+            {% for row in object_list %}
+            <tr>
+                <td>
+                    {{ row.author|upper }}
+                    {{ row.desc }}:
+                    <b>{{ row.linkToTransaction.amount }}</b> paid by 
+                    {{ row.linkToTransaction.user_paid|upper }} for
+                    {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                </td>
+                <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+            </tr>
+            {% endfor %}
+        </table>
         {% endif %}
-<!-- }}} -->
-<!-- {{{ posts display-->
+        <!-- }}} -->
+        <!-- {{{ posts display-->
         {% if displayType == 'posts' %}
-            <h3>new posts</h3>
-            <table class="table ">
-                {% for row in object_list_new %}
-                <tr>
-                    <td>
-                        {{ row.desc }}::
-                        <b>{{ row.author }}</b> 
-                    </td>
-                    <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
-                    <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            <h3>all posts</h3>
+            {% if object_list_new %}
+                <h3>new posts</h3>
+                <table class="table ">
+                    <thead>
+                        <tr>
+                            <th>Post</th>
+                            <th>Visible To</th>
+                            <th>Posted At</th>
+                        </tr>
+                    </thead>
+                    {% for row in object_list_new %}
+                    <tr>
+                        <td>
+                            {{ row.desc }}::
+                            <b>{{ row.author }}</b> 
+                        </td>
+                        <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
+                        <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+            <h3>All Posts</h3>
             <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Post</th>
+                        <th>Visible To</th>
+                        <th>Posted At</th>
+                    </tr>
+                </thead>
                 {% for row in object_list %}
                 <tr>
                     <td>
-                        {{ row.desc }}::
-                        <b>{{ row.author }}</b> 
+                        <b>{{ row.author }} says:</b> 
+                        {{ row.desc }}
                     </td>
                     <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                     <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
@@ -91,7 +107,7 @@ Display {{ displayType }}
                 {% endfor %}
             </table>
         {% endif %}
-<!-- }}} -->
+        <!-- }}} -->
     </div>
 </div>
 {% endblock %}

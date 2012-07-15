@@ -35,9 +35,8 @@ Create Transaction
     <div class="span2">
         {% include "navlist.html" %}
     </div>
-    <div class="span10">
-        <div class="span1"></div>
-        <div class="span8">
+    <div class ="span1"></div>
+    <div class="span5">
             {% ifnotequal  noOfNewNoti 0 %}
             <a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
             {% endifnotequal %}
@@ -63,7 +62,6 @@ Create Transaction
                     </div>
                 </div>
             </form>
-        </div>
     </div>
 </div>
 {% endblock %}

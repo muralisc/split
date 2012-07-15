@@ -9,18 +9,6 @@ delete {{ deleteType }}
         {% include "navlist.html" %}
     </div>
     <div class="span9">
-        {% if deleteType = 'users' %}
-            <table class="table table-striped">
-                {% for row in usersDBrows %}
-                <tr>
-                    <td>{{ row.id }}</td>
-                    <td>{{ row.username }}</td>
-                    <td>{{ row.outstanding}}</td>
-                    <td><a href="/deleteUser/{{ row.id }}/">delete</a></td>
-                </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
         {% if deleteType = 'transactions' %}
             <table class="table table-striped">
                 {% for row in txnsDBrows %}

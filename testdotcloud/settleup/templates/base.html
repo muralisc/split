@@ -17,11 +17,15 @@
                 background-image:url(''); //http://bgrepeat.com/
             }
         </style>
-
+		<script type="text/javascript">
+			$(document).ready(function() {
+			$("input[type=text]").addClass("span9");
+		});
+			</script>
     </head>
     <body>
         <div class="container-fluid" >
-            {% block header%}
+            {% block header%} 
             <div class="row-fluid">
                 <div class="span5"></div>
                 <div class="page-header">
@@ -46,7 +50,7 @@
             <div class="container">
                 <div class="row">
                     <div class="span10">
-                        <p>powered by <a href="http://www.djangoproject.com/">Django</a>,<a target="_blank" href="http://getbootstrap.com">Bootstrap.</a></p>
+                      <!-- <p>powered by <a href="http://www.djangoproject.com/">Django</a>,<a target="_blank" href="http://getbootstrap.com">Bootstrap.</a></p> -->
                     </div>
                 </div>
             </div>

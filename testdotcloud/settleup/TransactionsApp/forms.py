@@ -14,6 +14,15 @@ class PasswordChangeForm(forms.Form):
 
 
 class transactionsForm(forms.ModelForm):   # {{{
+    def __init__(self, *args, **kwargs):
+        super(transactionsForm, self).__init__(*args, **kwargs)
+        # change a widget attribute:
+        self.fields['users_involved'].queryset = users.objects.filter(
+                                                    ~Q(name__exact='admin')
+                                                    )
+        self.fields['user_paid'].queryset = users.objects.filter(
+                                                    ~Q(name__exact='admin')
+                                                    )
     class Meta:
         model = transactions
         widgets = {
@@ -53,8 +62,9 @@ class PostsForm(forms.ModelForm):
         self.fields['desc'].label = 'Post Desc'
         self.fields['audience'].queryset = users.objects.filter(
                                                     ~Q(name__exact=usr.name)
+                                                    ).filter(
+                                                    ~Q(name__exact="admin")
                                                     )
-
     class Meta:
         model = PostsTable
         widgets = {

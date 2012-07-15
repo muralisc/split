@@ -1,4 +1,5 @@
 *.pyc
 testdotcloud/settleup/.ropeproject/*
 testdotcloud/settleup/TransactionsApp/migrations/*
+testdotcloud/settleup/build/*
 *~

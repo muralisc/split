@@ -12,6 +12,6 @@ class EditUserForm(forms.ModelForm):  # {{{
                 'groups',
                 )
         widgets = {
-                'password': forms.PasswordInput(),
+                'password': forms.TextInput(),
                 }
         #}}}

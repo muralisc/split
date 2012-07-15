@@ -8,7 +8,7 @@ from adminApp.forms import EditUserForm
 
 def admin_view(request):
     if users.objects.get(pk=request.session['sUserId']).username == 'admin':
-        pass
+        userFullName = 'admin'
     else:
         return redirect('/')
     usersTable = users.objects.all()

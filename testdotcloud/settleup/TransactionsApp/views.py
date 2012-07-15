@@ -210,8 +210,8 @@ def display_notifications(request, *args):
         return redirect('/')
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if(args[0] == 'all'):
-        object_list = PostsTable.objects.order_by(
-                                            '-timestamp'
+        object_list = PostsTable.objects.filter(
+                                            id__lte=loggedInUser.lastNotification.id
                                             ).filter(
                                             PostType__exact='noti'
                                             ).filter(
@@ -238,7 +238,7 @@ def display_notifications(request, *args):
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
 
 
-class DisplayPosts(ListView):
+class DisplayPosts(ListView):  # {{{
     template_name = "display.html"
 
     def get_queryset(self):
@@ -273,6 +273,7 @@ class DisplayPosts(ListView):
         context['displayType'] = 'posts'
         context['userFullName'] = users.objects.get(pk=self.request.session['sUserId']).name
         return context
+    # }}}
 
 
 def display_transactions(request, kind):   # {{{
@@ -425,7 +426,7 @@ def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding
             tmp.save()
     usersDBrows = users.objects.filter(deleted__exact=False)
     deleteType = 'users'
-    return render_to_response('delete.html', locals(), context_instance=RequestContext(request))  # }}}
+    return render_to_response('adminDeleteUser.html', locals(), context_instance=RequestContext(request))  # }}}
      #}}}
 
 

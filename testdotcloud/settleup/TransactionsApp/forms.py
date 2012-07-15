@@ -26,7 +26,7 @@ class transactionsForm(forms.ModelForm):   # {{{
     class Meta:
         model = transactions
         widgets = {
-                'description': forms.Textarea(attrs={'class': 'textInput'}),
+                'description': forms.Textarea(attrs={'class': 'textInput','rows':'3'}),
                 'amount': forms.TextInput(attrs={'class': 'textInput'}),
                 'users_involved': forms.CheckboxSelectMultiple(),
                 }
@@ -68,7 +68,7 @@ class PostsForm(forms.ModelForm):
     class Meta:
         model = PostsTable
         widgets = {
-                'desc': forms.Textarea(attrs={'class': 'textInput'}),
+                'desc': forms.Textarea(attrs={'class': 'textInput','rows':'3'}),
                 'audience': forms.CheckboxSelectMultiple(),
                 }
         exclude = (

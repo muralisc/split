@@ -65,6 +65,7 @@ Admin Page
                     <th>perpersoncost</th>
                     <th>deleted</th>
                     <th>groups</th>
+                    <th>delete</th>
                 </tr>
             </thead>
             {% for row in transactionsTable %}
@@ -78,6 +79,7 @@ Admin Page
                 <td>{{ row.perpersoncost }}</td>
                 <td>{{ row.deleted }}</td>
                 <td>{{ row.group }}</td>
+                <td>{% if row.deleted %}<a href="/admin/deleteTxn/{{ row.id }}/">delete</a>{% endif %}</td>
             </tr>
             {% endfor%}
         </table>

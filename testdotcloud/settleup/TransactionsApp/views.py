@@ -142,6 +142,7 @@ def create_transaction(request):     # {{{
             postObject.audience.add(transactionsObj.user_paid)
             return redirect('/displayTransactions/' + postObject.author.name + '/')
     else:
+        # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
         form = transactionsForm()
         try:

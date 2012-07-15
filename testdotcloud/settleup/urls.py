@@ -26,4 +26,5 @@ urlpatterns = patterns('',
     (r'^admin/$', 'settleup.adminApp.views.admin_view'),
     (r'^admin/editUser/(\d+)/$', 'settleup.adminApp.views.edit_user'),
     (r'^admin/deletePost/(\d+)/$', 'settleup.adminApp.views.delete_post'),
+    (r'^admin/deleteTxn/(\d+)/$', 'settleup.adminApp.views.delete_txn'),
 )

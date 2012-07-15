@@ -7,6 +7,8 @@ from adminApp.forms import EditUserForm
 
 
 def admin_view(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
     if users.objects.get(pk=request.session['sUserId']).username == 'admin':
         userFullName = 'admin'
     else:
@@ -32,8 +34,8 @@ def edit_user(request, usr_id):                    # {{{
             pass
     return render_to_response('adminEditUser.html', locals(), context_instance=RequestContext(request))
                                          #}}}
-                                         
-                                         
+
+
 def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding field
     if users.objects.get(pk=request.session['sUserId']).username == 'admin':
         pass
@@ -54,5 +56,17 @@ def delete_post(request, post_id):  # {{{
     if(int(post_id) >= 0):
         postTOdelete = PostsTable.objects.get(id=post_id)
         postTOdelete.delete()
+    return redirect('/admin')
+     #}}}
+
+
+def delete_txn(request, txn_id):  # {{{
+    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
+        pass
+    else:
+        return redirect('/')
+    if(int(txn_id) >= 0):
+        txnTOdelete = transactions.objects.get(id=txn_id)
+        txnTOdelete.delete()
     return redirect('/admin')
      #}}}

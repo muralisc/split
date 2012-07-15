@@ -52,8 +52,10 @@ def logout(request):  # {{{
 
 def create_user(request):                    # {{{
     # checking if logged in
-    if request.session.get('sUserId', False):
-        return redirect('/createTransaction')
+    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
+        userFullName = 'admin'
+    else:
+        return redirect('/')
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
@@ -75,7 +77,7 @@ def create_user(request):                    # {{{
                                                             ).latest('id')
                 except:
                     currentUserObject.lastPost = None
-                    currentUserObject.lastLogin = datetime.datetime.now()
+                currentUserObject.lastLogin = datetime.datetime.now()
                 currentUserObject.save()
                 createUserPrompt = "User added.Login to continue"
             else:
@@ -152,7 +154,7 @@ def create_transaction(request):     # {{{
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
-                loggedInUser.lastNotification = PostsTable.objects.get(id=1)
+                loggedInUser.lastNotification = PostsTable.objects.latest('id')
                 loggedInUser.save()
             noOfNewNoti = 0
         try:
@@ -165,7 +167,7 @@ def create_transaction(request):     # {{{
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
-                loggedInUser.lastPost = PostsTable.objects.get(id=1)
+                loggedInUser.lastPost = PostsTable.objects.latest('id')
                 loggedInUser.save()
             noOfNewPosts = 0
     return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
@@ -205,9 +207,7 @@ def display_users(request):              # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.filter(deleted__exact=False).filter(
-                                                    ~Q(name__exact='admin')
-                                                    )
+    usersDBrows = users.objects.filter(deleted__exact=False)
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}

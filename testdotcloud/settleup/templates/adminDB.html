@@ -89,15 +89,18 @@ Admin Page
                 <tr>
                     <th>id</th>
                     <th>author</th>
+                    <th>description</th>
                     <th>timestamp</th>
                     <th>audience</th>
                     <th>linkToTransaction</th>
                     <th>PostType</th>
                     <th>deleted</th>
+                    <th>delete</th>
                 </tr>
             </thead>
             {% for row in postsTable %}
             <tr>
+                <td>{{ row.id }}</td>
                 <td>{{ row.author }}</td>
                 <td>{{ row.desc }}</td>
                 <td>{{ row.timestamp  }}</td>
@@ -105,6 +108,7 @@ Admin Page
                 <td>{{ row.linkToTransaction }}</td>
                 <td>{{ row.PostType }}</td>
                 <td>{{ row.deleted }}</td>
+                <td><a href="/admin/deletePost/{{ row.id }}/">delete</a></td>
             </tr>
             {% endfor%}
         </table>

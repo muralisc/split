@@ -6,8 +6,6 @@ class EditUserForm(forms.ModelForm):  # {{{
     class Meta:
         model = users
         exclude = (
-                'lastNotification',
-                'lastPost',
                 'groups',
                 )
         widgets = {

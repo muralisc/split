@@ -44,3 +44,15 @@ def delete_user(request, usr_id):  # {{{ TODO refine transacions and outstanding
         usrTOdelete.delete()
     return redirect('/admin')
      #}}}
+
+
+def delete_post(request, post_id):  # {{{
+    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
+        pass
+    else:
+        return redirect('/')
+    if(int(post_id) >= 0):
+        postTOdelete = PostsTable.objects.get(id=post_id)
+        postTOdelete.delete()
+    return redirect('/admin')
+     #}}}

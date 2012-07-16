@@ -16,6 +16,7 @@ class users(models.Model):    # {{{
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
     email = models.EmailField(max_length=30)
+    # current outstanding [dont specify as initial outstanding]
     outstanding = models.FloatField(blank=True, null=True)
     # deleting users is a complex operation. once delted cannot be retrievd
     # back so remove this field TODO

@@ -317,7 +317,7 @@ def display_transactions(request, kind):   # {{{
         for j, J in enumerate(userstable):
             if i == 0:
                 newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = table[i][J.username] + J.outstanding
+                newtable[i][j + len(userstable) + 6] = table[i][J.username]
             else:
                 newtable[i][j + 6] = table[i][J.username]
                 newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]

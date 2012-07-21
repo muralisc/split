@@ -45,8 +45,11 @@ def login(request):  # {{{
 
 
 def logout(request):  # {{{
-    del request.session['sUserId']
-    return redirect('/')
+    if request.session.get('sUserId', False):
+        del request.session['sUserId']
+        return redirect('/')
+    else:
+        return redirect('/')
     #}}}
 
 
@@ -225,6 +228,8 @@ def display_notifications(request, *args):    # {{{
                                             PostType__exact='noti'
                                             ).filter(
                                             audience__in=[loggedInUser.id]
+                                            ).order_by(
+                                            '-id'
                                             )
     if(loggedInUser.lastNotification):
         object_list_new = PostsTable.objects.filter(
@@ -233,6 +238,8 @@ def display_notifications(request, *args):    # {{{
                                             PostType__exact='noti'
                                             ).filter(
                                             audience__in=[loggedInUser.id]
+                                            ).order_by(
+                                            '-id'
                                             )
         noOfNewNoti = len(object_list_new)
     try:
@@ -501,7 +508,7 @@ def calculator(request, exp):       # {{{
     html = response.read()
     error = re.findall(r'error: "(.*?)"', html)
     result = re.findall(r'rhs: "(.*?)"', html)
-    result = re.sub('\xa0','',result[0])
+    result = re.sub('\xa0', '', result[0])
     if error != [""] and error != ['0'] and error != ['4']:
         result = error
     return HttpResponse(result)

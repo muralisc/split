@@ -17,6 +17,7 @@ Display {{ displayType }}
                     <th>name</th>
                     <th>username</th>
                     <th>outstanding</th>
+                    <th>last login @</th>
                 </tr>
             </thead>
             {% for row in usersDBrows %}
@@ -24,6 +25,7 @@ Display {{ displayType }}
                 <td>{{ row.name }}</td>
                 <td>{{ row.username }}</td>
                 <td>{{ row.outstanding  }}</td>
+                <td>{{ row.lastLogin  }}</td>
             </tr>
             {% endfor%}
         </table>
@@ -31,6 +33,8 @@ Display {{ displayType }}
         <!-- }}} -->
         <!-- {{{ notifications display -->
         {% if displayType == 'notifications' %}
+        {% if object_list_new %}
+        <h3>New notifications</h3>
         <table class="table">
             {% for row in object_list_new %}
             <tr>
@@ -45,6 +49,7 @@ Display {{ displayType }}
             </tr>
             {% endfor %}
         </table>
+        {% endif %}
         <h3>All notifications</h3>
         <table class="table table-striped">
             {% for row in object_list %}
@@ -65,7 +70,7 @@ Display {{ displayType }}
         <!-- {{{ posts display-->
         {% if displayType == 'posts' %}
             {% if object_list_new %}
-                <h3>new posts</h3>
+                <h3>New Posts</h3>
                 <table class="table ">
                     <thead>
                         <tr>

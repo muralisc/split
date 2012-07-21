@@ -7,7 +7,7 @@ class loginForm(forms.Form):
     username = forms.CharField(max_length=50,label='',widget=forms.TextInput(attrs={'placeholder': 'Username'}))
     password = forms.CharField(label='',widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
 
-    
+
 class PasswordChangeForm(forms.Form):
     oldPassword = forms.CharField(widget=forms.PasswordInput)
     newPassword = forms.CharField(widget=forms.PasswordInput)

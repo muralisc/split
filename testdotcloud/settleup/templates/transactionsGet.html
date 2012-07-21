@@ -27,6 +27,20 @@ Create Transaction
             $('#id_amount').keydown(function() {
                     $('#calcu').text('some packets forgot their way here ;)');
                     });
+
+            $("label:contains('involved')").html("Users Involved<br/><input type='checkbox' id='selectAll'> Select All");
+            // toggle when select all is clicked
+            $('#selectAll').click(function() {
+                $("input[name='users_involved']").attr('checked',this.checked);
+                });
+            // check selectall when all boxes are clicked
+            $("input[name='users_involved']").click(function(){
+                if($("input[name='users_involved']").length == $("input[name='users_involved']:checked").length) {
+                        $("#selectAll").attr("checked", "checked");
+                        } else {
+                        $("#selectAll").removeAttr("checked");
+                    }
+                });       
             });
 </script>
 {% endblock %}

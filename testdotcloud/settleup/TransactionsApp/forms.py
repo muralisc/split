@@ -1,11 +1,11 @@
 from django import forms
-from TransactionsApp.models import transactions, users, PostsTable
+from TransactionsApp.models import transactions, users, PostsTable, GroupsTable
 from django.db.models import Q
 
 
 class loginForm(forms.Form):
-    username = forms.CharField(max_length=50,label='',widget=forms.TextInput(attrs={'placeholder': 'Username'}))
-    password = forms.CharField(label='',widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
+    username = forms.CharField(max_length=50, label='', widget=forms.TextInput(attrs={'placeholder': 'Username'}))
+    password = forms.CharField(label='', widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
 
 
 class PasswordChangeForm(forms.Form):
@@ -23,11 +23,12 @@ class transactionsForm(forms.ModelForm):   # {{{
         self.fields['user_paid'].queryset = users.objects.filter(
                                                     ~Q(name__exact='admin')
                                                     )
+
     class Meta:
         model = transactions
         widgets = {
-                'description': forms.Textarea(attrs={'class': 'textInput','rows':'3'}),
-                'amount': forms.TextInput(attrs={'class': 'textInput'}),
+                'description': forms.Textarea(attrs={'class': '', 'rows': '1', 'placeholder': 'Description'}),
+                'amount': forms.TextInput(attrs={'class': '', 'placeholder': 'Amount'}),
                 'users_involved': forms.CheckboxSelectMultiple(),
                 }
         exclude = ('perpersoncost',
@@ -77,4 +78,14 @@ class PostsForm(forms.ModelForm):
                    'linkToTransaction',
                    'PostType',
                    'deleted',
+                )
+
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        models = GroupsTable
+        exclude = (
+                    'members',
+                    'admins',
+                    'deleted',
                 )

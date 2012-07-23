@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block cur_title  %}
+Transaction
+{% endblock %}
+{% block current_head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+            $('#id_amount').attr('autocomplete','off');
+            $('#id_amount').focus(function() {
+                $('#id_amount').before("<div id='calcu'></div>")
+                });       
+            $('#id_amount').blur(function() {
+                var nos = $('#id_amount').val();
+                $.get('/calculator/'+nos+'/',function(data)
+                    {
+                    $('#calcu').remove();
+                    $('#id_amount').val(data);
+                    });
+                });       
+            $('#id_amount').keyup(function() {
+                var nos = $('#id_amount').val();
+                $.get('/calculator/'+nos+'/',function(data)
+                    {
+                    $('#calcu').text(data);
+                    });
+                });       
+            $('#id_amount').keydown(function() {
+                    $('#calcu').text('some packets forgot their way here ;)');
+                    });
+
+            $("label:contains('involved')").html("Users Involved<br/><input type='checkbox' id='selectAll'> Select All");
+            // toggle when select all is clicked
+            $('#selectAll').click(function() {
+                $("input[name='users_involved']").attr('checked',this.checked);
+                });
+            // check selectall when all boxes are clicked
+            $("input[name='users_involved']").click(function(){
+                if($("input[name='users_involved']").length == $("input[name='users_involved']:checked").length) {
+                        $("#selectAll").attr("checked", "checked");
+                        } else {
+                        $("#selectAll").removeAttr("checked");
+                    }
+                });       
+            //----------------------------------------------------------
+            $('#mytable').fixheadertable({
+                caption     : '{{ kind }} Transactions',
+                whiteSpace  : 'normal',
+                height      : 400,
+                width       : 950,
+                zebra       : true,
+                {% ifequal kind 'all'%}
+                minWidth    : 1400,
+                {% endifequal %}
+                addTitles	: true,
+                sortable    : true, 
+                });
+            $('table#side_table tr').superLink();
+
+            });
+</script>
+<!-- http://www.tablefixedheader.com/fullpagedemo/ -->
+ <script type="text/javascript" src="{{ STATIC_URL }}fixheadertable/javascript/jquery.fixheadertable.js"></script> 
+ <script type="text/javascript" src="{{ STATIC_URL }}superlink.jquery.js"></script> 
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/css/base.css" />
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/jquery-ui/css/ui-lightness/jquery-ui-1.8.4.custom.css" />
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span2">
+			{% include "navlist.html" %}
+		</div>
+		<div class="span9">
+            <div class="span1"></div>
+			<div class="span8">
+				{% ifnotequal  noOfNewNoti 0 %}
+				<a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
+				{% endifnotequal %}
+				{% ifnotequal  noOfNewPosts 0 %}
+				<a href="/displayPosts/all/"> {{ noOfNewPosts }} new Posts for you</a>
+				{% endifnotequal %}
+				<form action="" method="post" class="well">
+				   {% csrf_token %}
+					<table class="table ">
+						<tr>
+							<td>{{form.description}}{{form.description.errors}}</td>
+							<td>{{form.amount}}{{form.amount.errors}}</td>
+						</tr>
+						<tr>
+							<td>{{form.user_paid.label}}</td>
+							<td>{{form.user_paid}}{{form.user_paid.errors}}</td>
+						</tr>
+						<tr>
+							<td>{{form.users_involved.label_tag}}</td>
+							<td>{{form.users_involved}}{{form.users_involved.errors}}</td>
+						</tr>
+					</table>
+					<input  class="btn" type="Submit" value = "Submit"/>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="row-fluid" id="table">
+		<div class="span2">
+			<ul class="nav nav-list">
+				<li class="nav-header">Click on A name</li>
+				<li><a href="/transactions/all/#table"><i class="icon-chevron-right"></i>All Transactions</a></li>
+                <table id="side_table" class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>spent</th>
+                            <th>In pool</th>
+                        </tr>
+                    </thead>
+				{% for rows,exp in ordered_userstable  %}
+						<tr>
+                            <td><a href="/transactions/{{rows.name}}/#table">{{rows.username|add:""}}</a></b></td>
+                            <td>{{ exp|floatformat }}</td>
+                            <td>{{rows.outstanding|floatformat}}</td>
+						</tr>
+				{%endfor%}
+                </table>
+                <li><a href="/download/"><i class="icon-chevron-right"></i>DOWNLOAD DB</a></li>
+			</ul>
+		</div>
+		<div class="span8">
+			<table id="mytable">
+				<thead>
+					<tr>
+						<th>id</th>
+						<th>description</th>
+						<th>amount</th>
+						<th>user paid</th>
+						<th>users involved</th>
+						<th>timestamp</th>
+						{% if not userpos %}
+							{% for i in userstable %}
+							<th>{{ i.username }}</th>
+							{% endfor  %}
+							
+							{% for i in userstable %}
+							<th>{{ i.username|upper }}</th>
+							{% endfor  %}
+						{% else %}
+							<th>{{ kind }}</th>
+							<th>Cumulative {{ kind }}</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for i in newtable %}
+					<tr id="font4">
+						{% for j in i%}
+								<td>{% if j|floatformat %}
+											{{ j|floatformat }}
+									 {% else %}
+											{{ j }}
+									 {% endif %}
+								</td>
+						{% endfor%}
+					</tr>
+					{% endfor%}
+				</tbody>
+			</table>
+			<b><u>Integrity check</u></b><br/>
+			Sum of all outstanding [should be zero]= {{sumOfAllOutstanding}}
+		</div>
+	</div>
+</div>
+{% endblock %}
+

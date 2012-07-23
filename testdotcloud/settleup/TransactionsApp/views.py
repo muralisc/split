@@ -4,6 +4,7 @@ from django.views.generic import ListView
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.forms.models import modelformset_factory
+from django.db.models import Sum
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm
@@ -18,7 +19,8 @@ import datetime
 def login(request):  # {{{
     try:
         if request.session.get('sUserId', False):
-            return redirect('/createTransaction')
+            userFullName = users.objects.get(pk=request.session['sUserId']).name
+            return redirect('/transactions/'+userFullName)
     except KeyError:
         pass
     if request.method == 'POST':
@@ -38,7 +40,7 @@ def login(request):  # {{{
                 if memberQuerySet[0].name == 'admin':
                     return redirect('/admin')
                 else:
-                    return redirect('/createTransaction')
+                    return redirect('/transactions/'+loggedInUser.name)
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -54,11 +56,6 @@ def logout(request):  # {{{
 
 
 def create_user(request):                    # {{{
-    # checking if logged in
-    if users.objects.get(pk=request.session['sUserId']).username == 'admin':
-        userFullName = 'admin'
-    else:
-        return redirect('/')
     if request.method == 'POST':
         form = addUserForm(request.POST)
         if form.is_valid():
@@ -92,90 +89,6 @@ def create_user(request):                    # {{{
                                          #}}}
 
 
-def create_transaction(request):     # {{{
-    """
-    displays and process a new transaction form
-    displays the number of new notifications
-    makes and entry in the Posts table
-    updates outstanding column in usertable
-    """
-    if 'sUserId' not in request.session:
-        return redirect('/')
-    else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-    if request.method == 'POST':
-        form = transactionsForm(request.POST)
-        if form.is_valid():
-            # retrieving the transactions object to populate the postObject field and the perpersoncost field
-            transactionsObj = form.save()
-            # perpersoncost field
-            transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
-            transactionsObj.save()
-            # outdtanding field
-            involvedList = list(transactionsObj.users_involved.all())
-            if transactionsObj.user_paid in involvedList:
-                for anyUsr in involvedList:
-                    if anyUsr != transactionsObj.user_paid:
-                        anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
-                        anyUsr.save()
-                    else:
-                        transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount - transactionsObj.perpersoncost
-                        transactionsObj.user_paid.save()
-            else:
-                for anyUsr in involvedList:
-                    anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
-                    anyUsr.save()
-                transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount
-                transactionsObj.user_paid.save()
-            postObject = PostsTable(
-                            author=users.objects.get(pk=request.session['sUserId']),
-                            desc='added transaction',
-                            linkToTransaction=transactions.objects.latest('timestamp'),
-                            PostType='noti',
-                                    )
-            postObject.save()
-            # 'loggedinuser' is put here because it interfears with the save
-            # operation at updating the user objects outstanding field
-            loggedInUser = users.objects.get(pk=request.session['sUserId'])
-            loggedInUser.lastNotification = postObject
-            loggedInUser.save()
-            for user in (transactionsObj.users_involved.all()):
-                # should be added like this cause it need a primary id for ManyToManyField
-                postObject.audience.add(user)
-            postObject.audience.add(transactionsObj.user_paid)
-            return redirect('/displayTransactions/' + postObject.author.name + '/')
-    else:
-        # for a fresh load of url
-        loggedInUser = users.objects.get(pk=request.session['sUserId'])
-        form = transactionsForm()
-        try:
-            noOfNewNoti = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id
-                                                    ).filter(
-                                                    PostType__exact='noti'
-                                                    ).filter(
-                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
-                                                    ).count()
-        except:
-            if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
-                loggedInUser.lastNotification = PostsTable.objects.latest('id')
-                loggedInUser.save()
-            noOfNewNoti = 0
-        try:
-            noOfNewPosts = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastPost.id
-                                                    ).filter(
-                                                    PostType__exact='post'
-                                                    ).filter(
-                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
-                                                    ).count()
-        except:
-            if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
-                loggedInUser.lastPost = PostsTable.objects.latest('id')
-                loggedInUser.save()
-            noOfNewPosts = 0
-    return render_to_response('transactionsGet.html', locals(), context_instance=RequestContext(request))
-                                     #}}}
 
 
 def create_post(request):   # {{{
@@ -255,6 +168,7 @@ def display_notifications(request, *args):    # {{{
             # }}}
 
 
+#login controll left TODO
 class DisplayPosts(ListView):  # {{{
     template_name = "display.html"
 
@@ -293,94 +207,6 @@ class DisplayPosts(ListView):  # {{{
     # }}}
 
 
-def display_transactions(request, kind):   # {{{
-    if 'sUserId' not in request.session:
-        return redirect('/')
-    else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-    userstable = users.objects.filter(deleted__exact=False)
-    txnstable = transactions.objects.filter(deleted__exact=False)
-    rows = {}
-    for i in userstable:
-        # make the sample row dictionary for the "newtable"
-        rows.update({i.username: 0})
-    table = [dict(rows) for k in range(txnstable.count())]
-    i = 0
-    # fetch each transaction database row
-    for i, curtxn in enumerate(txnstable):
-        if i == 0:
-            table[i][curtxn.user_paid.username] += curtxn.amount
-            perpersoncost = curtxn.amount / curtxn.users_involved.count()
-            for usrinv in curtxn.users_involved.all():
-                table[i][usrinv.username] -= perpersoncost
-        if i != 0:
-            table[i][curtxn.user_paid.username] += curtxn.amount
-            perpersoncost = curtxn.amount / curtxn.users_involved.count()
-            for usrinv in curtxn.users_involved.all():
-                # populating "table" a list of dictionaries
-                table[i][usrinv.username] -= perpersoncost
-    newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
-    for i, I in enumerate(table):
-        for j, J in enumerate(userstable):
-            if i == 0:
-                newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = table[i][J.username]
-            else:
-                newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
-    for i, row in enumerate(txnstable):
-        newtable[i][0] = row.id
-        newtable[i][1] = row.description
-        newtable[i][2] = row.amount
-        newtable[i][3] = row.user_paid
-        newtable[i][4] = ''
-        for ui_rows in row.users_involved.all():
-            newtable[i][4] += ui_rows.username + ' '
-        newtable[i][5] = row.timestamp
-    request.session['downloadData'] = list(newtable)
-    # checking the url
-    if cmp(kind, 'all') == 0:
-        pass
-    # else get transctions of user alone
-    else:
-        currentUser = users.objects.get(name=kind)
-        # get txn ids of involved
-        txn_ids = currentUser.transactions_set1.values('id')
-        # get txn ids of paid
-        txn_ids1 = currentUser.transactions_set.values('id')
-        txn_ids_list = []
-        for i in txn_ids:
-            txn_ids_list.append(i['id'])
-        for i in txn_ids1:
-            # make a txn_ids_list
-            txn_ids_list.append(i['id'])
-        temp = newtable
-        # make "new" newtable form newtable
-        newtable = []
-        userpos = 0
-        for j in userstable:
-            if j.name == kind:
-                userpos = userpos + 1
-                break
-            userpos = userpos + 1
-        usercount = len(userstable)
-        for i in temp:
-            if i[0] in txn_ids_list:
-                t = i[0:6]
-                t.append(i[5 + userpos])
-                t.append(i[5 + userpos + usercount])
-                newtable.append(t)
-    # a ordered_userstable variable for link display in order
-    ordered_userstable = users.objects.filter(deleted__exact=False).order_by('-outstanding')
-    for i, I in enumerate(newtable):
-        I[0] = i
-    newtable.reverse()
-    # integrity checks
-    sumOfAllOutstanding = 0
-    for j in userstable:
-        sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
-    return render_to_response('displayDetailedTransactions.html', locals(), context_instance=RequestContext(request))
-                                                  #}}}
 #========================================================
 
 
@@ -482,10 +308,13 @@ def fetch_quote(request):  # {{{
 
 # TODO consolidate the database
 # create a logs table
-# create a verify script or incorporate it with the database. thingy
 # user settings
 
 def download_as_csv(request):   # {{{
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    else:
+        return redirect('/')
     if 'downloadData' in request.session:
         # Create the HttpResponse object with the appropriate CSV header.
         response = HttpResponse(mimetype='text/csv')
@@ -517,10 +346,10 @@ def calculator(request, exp):       # {{{
 
 def user_password_change(request):                    # {{{
     # checking if logged in
-    if 'sUserId' not in request.session:
-        pass
-    else:
+    if request.session.get('sUserId', False):
         userFullName = users.objects.get(pk=request.session['sUserId']).name
+    else:
+        return redirect('/')
     usrToEdit = users.objects.get(id=request.session['sUserId'])
     form = PasswordChangeForm(request.POST or None)
     if request.method == 'POST':
@@ -536,3 +365,190 @@ def user_password_change(request):                    # {{{
             pass
     return render_to_response('userPasswordChange.html', locals(), context_instance=RequestContext(request))
                                          #}}}
+
+
+def home_page(request):
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    else:
+        return redirect('/')
+    return render_to_response('home.html', locals(), context_instance=RequestContext(request))
+
+
+def create_group(request):
+    return render_to_response('.html', locals(), context_instance=RequestContext(request))
+
+
+def transaction_create_display(request, kind):
+    """
+    displays and process a new transaction form
+    displays the number of new notifications
+    makes and entry in the Posts table
+    updates outstanding column in usertable
+    """
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    if request.method == 'POST':
+        form = transactionsForm(request.POST)
+        if form.is_valid():
+            # retrieving the transactions object to populate the postObject field and the perpersoncost field
+            transactionsObj = form.save()
+            # perpersoncost field
+            transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
+            transactionsObj.save()
+            # outdtanding field
+            involvedList = list(transactionsObj.users_involved.all())
+            if transactionsObj.user_paid in involvedList:
+                for anyUsr in involvedList:
+                    if anyUsr != transactionsObj.user_paid:
+                        anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
+                        anyUsr.save()
+                    else:
+                        transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount - transactionsObj.perpersoncost
+                        transactionsObj.user_paid.save()
+            else:
+                for anyUsr in involvedList:
+                    anyUsr.outstanding = anyUsr.outstanding - transactionsObj.perpersoncost
+                    anyUsr.save()
+                transactionsObj.user_paid.outstanding = transactionsObj.user_paid.outstanding + transactionsObj.amount
+                transactionsObj.user_paid.save()
+            postObject = PostsTable(
+                            author=users.objects.get(pk=request.session['sUserId']),
+                            desc='added transaction',
+                            linkToTransaction=transactions.objects.latest('timestamp'),
+                            PostType='noti',
+                                    )
+            postObject.save()
+            # 'loggedinuser' is put here because it interfears with the save
+            # operation at updating the user objects outstanding field
+            loggedInUser = users.objects.get(pk=request.session['sUserId'])
+            loggedInUser.lastNotification = postObject
+            loggedInUser.save()
+            for user in (transactionsObj.users_involved.all()):
+                # should be added like this cause it need a primary id for ManyToManyField
+                postObject.audience.add(user)
+            postObject.audience.add(transactionsObj.user_paid)
+            return redirect('/transactions/'+userFullName+'/')
+    else:
+        # for a fresh load of url
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
+        form = transactionsForm()
+        try:
+            noOfNewNoti = PostsTable.objects.filter(
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id
+                                                    ).filter(
+                                                    PostType__exact='noti'
+                                                    ).filter(
+                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
+                                                    ).count()
+        except:
+            if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
+                loggedInUser.lastNotification = PostsTable.objects.latest('id')
+                loggedInUser.save()
+            noOfNewNoti = 0
+        try:
+            noOfNewPosts = PostsTable.objects.filter(
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastPost.id
+                                                    ).filter(
+                                                    PostType__exact='post'
+                                                    ).filter(
+                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
+                                                    ).count()
+        except:
+            if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
+                loggedInUser.lastPost = PostsTable.objects.latest('id')
+                loggedInUser.save()
+            noOfNewPosts = 0
+    userstable = users.objects.filter(deleted__exact=False)
+    txnstable = transactions.objects.filter(deleted__exact=False)
+    rows = {}
+    for i in userstable:
+        # make the sample row dictionary for the "newtable"
+        rows.update({i.username: 0})
+    table = [dict(rows) for k in range(txnstable.count())]
+    i = 0
+    # fetch each transaction database row
+    for i, curtxn in enumerate(txnstable):
+        if i == 0:
+            table[i][curtxn.user_paid.username] += curtxn.amount
+            perpersoncost = curtxn.amount / curtxn.users_involved.count()
+            for usrinv in curtxn.users_involved.all():
+                table[i][usrinv.username] -= perpersoncost
+        if i != 0:
+            table[i][curtxn.user_paid.username] += curtxn.amount
+            perpersoncost = curtxn.amount / curtxn.users_involved.count()
+            for usrinv in curtxn.users_involved.all():
+                # populating "table" a list of dictionaries
+                table[i][usrinv.username] -= perpersoncost
+    newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
+    for i, I in enumerate(table):
+        for j, J in enumerate(userstable):
+            if i == 0:
+                newtable[i][j + 6] = table[i][J.username]
+                newtable[i][j + len(userstable) + 6] = table[i][J.username]
+            else:
+                newtable[i][j + 6] = table[i][J.username]
+                newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
+    for i, row in enumerate(txnstable):
+        newtable[i][0] = row.id
+        newtable[i][1] = row.description
+        newtable[i][2] = row.amount
+        newtable[i][3] = row.user_paid
+        newtable[i][4] = ''
+        for ui_rows in row.users_involved.all():
+            newtable[i][4] += ui_rows.username + ' '
+        newtable[i][5] = row.timestamp
+    request.session['downloadData'] = list(newtable)
+    # checking the url
+    if cmp(kind, 'all') == 0:
+        pass
+    # else get transctions of user alone
+    else:
+        currentUser = users.objects.get(name=kind)
+        # get txn ids of involved
+        txn_ids = currentUser.transactions_set1.values('id')
+        # get txn ids of paid
+        txn_ids1 = currentUser.transactions_set.values('id')
+        txn_ids_list = []
+        for i in txn_ids:
+            txn_ids_list.append(i['id'])
+        for i in txn_ids1:
+            # make a txn_ids_list
+            txn_ids_list.append(i['id'])
+        temp = newtable
+        # make "new" newtable form newtable
+        newtable = []
+        userpos = 0
+        for j in userstable:
+            if j.name == kind:
+                userpos = userpos + 1
+                break
+            userpos = userpos + 1
+        usercount = len(userstable)
+        for i in temp:
+            if i[0] in txn_ids_list:
+                t = i[0:6]
+                t.append(i[5 + userpos])
+                t.append(i[5 + userpos + usercount])
+                newtable.append(t)
+    # a ordered_userstable variable for link display in order
+    outstanding_userstable = users.objects.filter(deleted__exact=False).order_by('-outstanding')
+    # calculate actual expenditure.
+    actual_expenditure = list()
+    for usr in outstanding_userstable:
+        aaa = usr.transactions_set1.aggregate(Sum('perpersoncost'))['perpersoncost__sum']
+        if aaa != None:
+            actual_expenditure.append(aaa)
+        else:
+            actual_expenditure(0)
+    ordered_userstable = zip(outstanding_userstable, actual_expenditure)
+    for i, I in enumerate(newtable):
+        I[0] = i
+    newtable.reverse()
+    # integrity checks
+    sumOfAllOutstanding = 0
+    for j in userstable:
+        sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
+    return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))

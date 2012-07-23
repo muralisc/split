@@ -9,6 +9,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     (r'^$', 'settleup.TransactionsApp.views.login'),
     (r'^createUser/$', 'settleup.TransactionsApp.views.create_user'),
+    (r'^createGroup/$', 'settleup.TransactionsApp.views.create_group'),
     (r'^changePassword/$', 'settleup.TransactionsApp.views.user_password_change'),
     (r'^home/$', 'settleup.TransactionsApp.views.home_page'),
     (r'^displayusers/$', 'settleup.TransactionsApp.views.display_users'),

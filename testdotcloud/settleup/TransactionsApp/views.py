@@ -7,7 +7,7 @@ from django.forms.models import modelformset_factory
 from django.db.models import Sum
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable
-from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm
+from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm, GroupForm
 # Python imports
 import urllib
 import csv
@@ -376,7 +376,21 @@ def home_page(request):
 
 
 def create_group(request):
-    return render_to_response('.html', locals(), context_instance=RequestContext(request))
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    userFullName = users.objects.get(pk=request.session['sUserId']).name
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    form = GroupForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            currentObject = form.save(commit=False)
+            currentObject.save()
+            currentObject.members.add(loggedInUser)
+            currentObject.adimns.add(loggedInUser)
+            createPrompt = "User added.Login to continue"
+        else:
+            createPrompt = "Username alredy exist. please chose a new one"
+    return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
 
 
 def transaction_create_display(request, kind):

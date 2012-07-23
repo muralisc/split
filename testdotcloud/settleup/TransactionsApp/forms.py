@@ -83,9 +83,9 @@ class PostsForm(forms.ModelForm):
 
 class GroupForm(forms.ModelForm):
     class Meta:
-        models = GroupsTable
+        model = GroupsTable
         exclude = (
                     'members',
-                    'admins',
+                    'adimns',
                     'deleted',
                 )

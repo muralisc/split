@@ -3,10 +3,10 @@ from django.shortcuts import render_to_response, redirect
 from django.views.generic import ListView
 from django.template import RequestContext
 from django.http import HttpResponse
-from django.forms.models import modelformset_factory
+from django.db.models import Q
 from django.db.models import Sum
 #from TransactionsApp.forms import
-from TransactionsApp.models import users, transactions, quotes, PostsTable
+from TransactionsApp.models import users, transactions, quotes, PostsTable, GroupsTable
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm, GroupForm
 # Python imports
 import urllib
@@ -14,13 +14,15 @@ import csv
 import re
 import random
 import datetime
+from json import JSONEncoder
+import itertools
 
 
 def login(request):  # {{{
     try:
         if request.session.get('sUserId', False):
             userFullName = users.objects.get(pk=request.session['sUserId']).name
-            return redirect('/transactions/'+userFullName)
+            return redirect('/transactions/' + userFullName)
     except KeyError:
         pass
     if request.method == 'POST':
@@ -40,7 +42,7 @@ def login(request):  # {{{
                 if memberQuerySet[0].name == 'admin':
                     return redirect('/admin')
                 else:
-                    return redirect('/transactions/'+loggedInUser.name)
+                    return redirect('/transactions/' + loggedInUser.name)
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -89,8 +91,6 @@ def create_user(request):                    # {{{
                                          #}}}
 
 
-
-
 def create_post(request):   # {{{
     if 'sUserId' not in request.session:
         return redirect('/')
@@ -126,6 +126,7 @@ def display_users(request):              # {{{
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     usersDBrows = users.objects.filter(deleted__exact=False).order_by("-outstanding")
     displayType = "users"
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
 
@@ -257,6 +258,7 @@ def settle_grp(request):  # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
     usersDBrows = users.objects.filter(deleted__exact=False).order_by('-outstanding')
     settleUPlist = []
     settleUPTextlist = []
@@ -370,9 +372,26 @@ def user_password_change(request):                    # {{{
 def home_page(request):
     if request.session.get('sUserId', False):
         userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
     else:
         return redirect('/')
+    user_groups = loggedInUser.groupsTable_members.all()
     return render_to_response('home.html', locals(), context_instance=RequestContext(request))
+
+
+def group_home_page(request, grp):
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    else:
+        return redirect('/')
+    user_groups = loggedInUser.groupsTable_members.all()
+    current_group = GroupsTable.objects.get(name__exact=grp)
+    if request.method == 'POST':
+        for i in request.POST['invites'].split(','):
+            # make approval logic
+            current_group.members.add(users.objects.get(pk=i))
+    return render_to_response('groupHome.html', locals(), context_instance=RequestContext(request))
 
 
 def create_group(request):
@@ -444,7 +463,7 @@ def transaction_create_display(request, kind):
                 # should be added like this cause it need a primary id for ManyToManyField
                 postObject.audience.add(user)
             postObject.audience.add(transactionsObj.user_paid)
-            return redirect('/transactions/'+userFullName+'/')
+            return redirect('/transactions/' + userFullName + '/')
     else:
         # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
@@ -566,3 +585,13 @@ def transaction_create_display(request, kind):
     for j in userstable:
         sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
     return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
+
+
+def user_search(request):
+    searchQuery = request.GET['q']
+    resultQuerySet = users.objects.filter(Q(name__icontains=searchQuery) | Q(username__icontains=searchQuery))
+    resultList = list()
+    for res in itertools.chain(resultQuerySet):
+        resultList.append({"id": res.pk, "name": res.name})
+    result = JSONEncoder().encode(resultList)
+    return HttpResponse(result)

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block cur_title  %}
+Home
+{% endblock %}
+{% block current_head %}
+<script type="text/javascript" src="{{ STATIC_URL }}tokeninput/jquery.tokeninput.js"></script>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}tokeninput/token-input.css" />
+
+<script type="text/javascript">
+$(document).ready(function () {
+    $("#user-search").tokenInput("/search/",{
+                //searchDelay: 2000,
+                //minChars: 4,
+                //tokenLimit: 3,
+                preventDuplicates: true,
+                hintText: "ഒരു പേര്‍ അടി ",
+                noResultsText: "ഒന്നും കിട്ടിയില്ല",
+                searchingText: "നോക്കട്ടേ ",
+                
+            });
+});
+</script>
+{% endblock %}
+{% block content %}
+<div class="row-fluid">
+    <div class="span2">
+        {% include "navlist.html" %}
+    </div>
+    <div class="span10">
+		<dl>
+			<dt>Name</dt>
+				<dd>{{current_group.name}}</dd>
+			<dt>Description</dt>
+				<dd>{{current_group.description}}</dd>
+			<dt>Admin</dt>
+				<dd>{% for i in current_group.adimns.all %}{{i}}<br/>{% endfor %}</dd>
+			<dt>Members</dt>
+				<dd>{% for i in current_group.members.all %}{%if i not in current_group.adimns.all %}{{i}}<br/>{% endif %}{% endfor %}</dd>
+			<dt>Invite Members</dt>
+				<dd>
+					<form class="form" action="" method="post">
+						{% csrf_token %}    
+						<input id="user-search" name="invites" type="text" autocomplete="off">
+						<input  class="btn" type="Submit" value = "Submit"/>
+					</form>
+				</dd>
+		</dl>
+	</div>
+</div>
+{% endblock %}

@@ -115,6 +115,31 @@ Admin Page
             {% endfor%}
         </table>
         <!-- }}}-->
+        <!-- {{{ GroupsTable display -->
+        <table class="table table-condensed table-bordered">
+            Groups Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>description</th>
+                    <th>members</th>
+                    <th>admin</th>
+                    <th>deleted</th>
+                </tr>
+            </thead>
+            {% for row in groupsTable %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.description }}</td>
+                <td>{% for usr in row.members.all %}{{ usr.name }},{% endfor %}</td>
+                <td>{% for usr in row.adimns.all %}{{ usr.name }},{% endfor %}</td>
+                <td>{{ row.deleted }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
     </div>
 </div>
 {% endblock %}

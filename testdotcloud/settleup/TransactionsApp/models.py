@@ -10,6 +10,9 @@ class GroupsTable(models.Model):
     adimns = models.ManyToManyField('users', related_name='groupsTable_admins')
     deleted = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return self.name
+
 
 class users(models.Model):    # {{{
     name = models.CharField(max_length=50)

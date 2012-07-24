@@ -11,4 +11,8 @@
     <li class="nav-header">></li>
     <li><a href="/settleUP"><i class="icon-thumbs-up"></i>SettleUP!!</a></li>
     <li><a href="/changePassword"><i class="icon-cog"></i>Change Password</a></li>
+    <li class="nav-header">Groups</li>
+    {%for i in loggedInUser.groupsTable_members.all %}
+    <li><a href="/settleUP"><i class="icon-th"></i>{{i}}</a></li>
+    {% endfor %}
 </ul>

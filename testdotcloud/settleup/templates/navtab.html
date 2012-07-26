@@ -1,0 +1,7 @@
+<div class="tabbable">
+	<ul class="nav nav-tabs">
+		{%for i in loggedInUser.groupsTable_members.all %}
+		<li id="liTabs"><a rel="{{i.pk}}" href="#"><b>{{i}}</b></a></li>
+		{% endfor %}
+    </ul>
+</div>

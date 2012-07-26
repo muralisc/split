@@ -28,7 +28,7 @@ class users(models.Model):    # {{{
     # PostsTable is in Quotes becase its declared down
     lastNotification = models.ForeignKey('PostsTable', blank=True, null=True, related_name='users_lastNotification')
     lastPost = models.ForeignKey('PostsTable', blank=True, null=True, related_name='users_lastPost')
-    # groups = models.ManyToManyField(GroupsTable, blank=True, null=True)
+    groups = models.ManyToManyField(GroupsTable, blank=True, null=True)
 
     def __unicode__(self):
         return self.username

@@ -216,6 +216,7 @@ def delete_transactions(request, txn_id):    # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(id=request.session['sUserId'])
     if(int(txn_id) >= 0):
         txnTOdelete = transactions.objects.get(id=txn_id)
         txnTOdelete.deleted = True
@@ -352,13 +353,13 @@ def user_password_change(request):                    # {{{
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     else:
         return redirect('/')
-    usrToEdit = users.objects.get(id=request.session['sUserId'])
+    loggedInUser = users.objects.get(id=request.session['sUserId'])
     form = PasswordChangeForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
-            if usrToEdit.password == form.cleaned_data['oldPassword']:
-                usrToEdit.password = form.cleaned_data['newPassword']
-                usrToEdit.save()
+            if loggedInUser.password == form.cleaned_data['oldPassword']:
+                loggedInUser.password = form.cleaned_data['newPassword']
+                loggedInUser.save()
                 return redirect('/')  # TODO go to user profile
             else:
                 userPrompt = "wrong old password"
@@ -386,7 +387,6 @@ def group_home_page(request, grp):
     else:
         return redirect('/')
     user_groups = loggedInUser.groupsTable_members.all()
-    current_group = GroupsTable.objects.get(name__exact=grp)
     if request.method == 'POST':
         for i in request.POST['invites'].split(','):
             # make approval logic
@@ -399,16 +399,15 @@ def create_group(request):
         return redirect('/')
     userFullName = users.objects.get(pk=request.session['sUserId']).name
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    form = GroupForm(request.POST or None)
     if request.method == 'POST':
+        form = GroupForm(request.POST or None)
         if form.is_valid():
             currentObject = form.save(commit=False)
             currentObject.save()
             currentObject.members.add(loggedInUser)
             currentObject.adimns.add(loggedInUser)
-            createPrompt = "User added.Login to continue"
-        else:
-            createPrompt = "Username alredy exist. please chose a new one"
+            createPrompt = "Group created"
+    form = GroupForm(None)
     return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
 
 
@@ -587,11 +586,43 @@ def transaction_create_display(request, kind):
     return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
 
 
-def user_search(request):
-    searchQuery = request.GET['q']
-    resultQuerySet = users.objects.filter(Q(name__icontains=searchQuery) | Q(username__icontains=searchQuery))
-    resultList = list()
-    for res in itertools.chain(resultQuerySet):
-        resultList.append({"id": res.pk, "name": res.name})
-    result = JSONEncoder().encode(resultList)
-    return HttpResponse(result)
+def search(request, kind):
+    if kind == 'users':
+        searchQuery = request.GET['q']
+        resultQuerySet = users.objects.filter(Q(name__icontains=searchQuery) | Q(username__icontains=searchQuery))
+        resultList = list()
+        for res in itertools.chain(resultQuerySet):
+            resultList.append({"id": res.pk, "name": res.name})
+        result = JSONEncoder().encode(resultList)
+        return HttpResponse(result)
+    if kind == 'groups':
+        searchQuery = request.GET['query']
+        resultQuerySet = GroupsTable.objects.filter(Q(name__icontains=searchQuery))
+        resultSuggession = list()
+        resultData = list()
+        for res in itertools.chain(resultQuerySet):
+            resultSuggession.append(res.name)
+            resultData.append(res.pk)
+        resultDict = {
+                        'query': searchQuery,
+                        'suggestions': resultSuggession,
+                        'data': resultData
+                    }
+        result = JSONEncoder().encode(resultDict)
+        return HttpResponse(result)
+
+
+# TODO convet posts table to prompts table
+# TODO convet adimns to admins
+# TODO convet user groups to foregin key
+
+def tab_click(request, grp_id):
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    try:
+        current_group = GroupsTable.objects.get(pk=grp_id)
+        loggedInUser.groups.clear()
+        loggedInUser.groups.add(current_group)
+        loggedInUser.save()
+    except:
+        return redirect('/')
+    return HttpResponse("done")

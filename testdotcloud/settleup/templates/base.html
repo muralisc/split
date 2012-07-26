@@ -19,9 +19,16 @@
         </style>
 		<script type="text/javascript">
 			$(document).ready(function() {
-			$("input[type=text]").addClass("span9");
-			$("input[type=password]").addClass("span9");
-		});
+				$("input[type=text]").addClass("span9");
+				$("input[type=password]").addClass("span9");
+				$("li:contains({{loggedInUser.groups.all.0.name}})").addClass("active");
+				$("li#liTabs > a").click( function(event){
+					event.preventDefault();
+					$.get('/tabClick/'+$(this).attr("rel"),function(){
+						window.setTimeout(function(){location.reload()},1);
+					});
+				});
+			});
 			</script>
     </head>
     <body>
@@ -40,6 +47,7 @@
                 <h4 class="pull-right">
                     {{ userFullName|upper }} <a class="btn btn-primary btn-mini" href="/logout">Logout</a>
                 </h4>
+                {% include "navtab.html" %}
             </div>
 				{% endif %}            
             {% block content%}

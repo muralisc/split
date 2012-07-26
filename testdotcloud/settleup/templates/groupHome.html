@@ -5,10 +5,9 @@ Home
 {% block current_head %}
 <script type="text/javascript" src="{{ STATIC_URL }}tokeninput/jquery.tokeninput.js"></script>
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}tokeninput/token-input.css" />
-
 <script type="text/javascript">
 $(document).ready(function () {
-    $("#user-search").tokenInput("/search/",{
+    $("#user-search").tokenInput("/search/users/",{
                 //searchDelay: 2000,
                 //minChars: 4,
                 //tokenLimit: 3,

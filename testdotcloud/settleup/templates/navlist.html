@@ -1,5 +1,5 @@
 <ul class="nav nav-list">
-    <li class="nav-header">Add links</li>
+	<li class="nav-header">Add links</li>
     <li><a href="/transactions/{{userFullName}}"><i class="icon-file"></i>New Transaction</a></li>
     <li><a href="/createPost/"><i class="icon-flag"></i>Put up a Post</a></li>
     <li class="nav-header">View links</li>
@@ -11,8 +11,6 @@
     <li class="nav-header">></li>
     <li><a href="/settleUP"><i class="icon-thumbs-up"></i>SettleUP!!</a></li>
     <li><a href="/changePassword"><i class="icon-cog"></i>Change Password</a></li>
-    <li class="nav-header">Groups</li>
-    {%for i in loggedInUser.groupsTable_members.all %}
-    <li><a href="/settleUP"><i class="icon-th"></i>{{i}}</a></li>
-    {% endfor %}
+    <li><a href="/home"><i class="icon-cog"></i>User Home</a></li>
+    <li><a href="/groupHome/{{loggedInUser.groups.all.0.name}}"><i class="icon-cog"></i>Group Home</a></li>
 </ul>

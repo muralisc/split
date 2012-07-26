@@ -3,15 +3,34 @@
 Home
 {% endblock %}
 {% block current_head %}
+<!-- http://www.devbridge.com/projects/autocomplete/jquery/-->
+<script type="text/javascript" src="{{ STATIC_URL }}autocomplete/jquery.autocomplete-min.js"></script> 
+<link rel="stylesheet" href="{{ STATIC_URL }}autocomplete/styles.css" type="text/css">
+<script type="text/javascript">
+$(document).ready(function () {
+    $("#user-search").autocomplete({ 
+    serviceUrl:'/search/groups/',
+    delimiter: /(,|;)\s*/,
+  });
+});
+</script>
+
 {% endblock %}
 {% block content %}
 <div class="row-fluid">
     <div class="span2">
-        Your Groups
-        {%for i in user_groups %}<a href="/groupHome/{{i}}/">{{ i }}</a>{% endfor %}
+        {% include "navlist.html" %}
     </div>
-    <h3>Hi {{ userFullName }}</h3>
-    <a href="">Join a Group</a>
-    <a href="/createGroup/">Create a Group</a>
+    <div class="span5">
+		<h4>{{ userFullName }}</h4>
+		{{loggedInUser.name}}<br/>
+		{{loggedInUser.email}}<br/>
+		<form class="" action="" method="post">
+			{% csrf_token %}    
+			<input id="user-search" type="text" class="span3" autocomplete="off">
+			<button type="Submit" class="btn"/>Join Group</button>
+		</form>
+		<h3><a href="/createGroup/">Create a Group</a><br/>
+	</div>
 </div>
 {% endblock %}

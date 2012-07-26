@@ -14,11 +14,11 @@ class PasswordChangeForm(forms.Form):
 
 
 class transactionsForm(forms.ModelForm):   # {{{
-    def __init__(self, *args, **kwargs):
+    def __init__(self, usr, *args, **kwargs):
         super(transactionsForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['users_involved'].queryset = users.objects.filter(
-                                                    ~Q(name__exact='admin')
+                                                    Q(name__in=[tempUsr.name for tempUsr in usr.groups.latest('id').members.all()]),
                                                     )
         self.fields['user_paid'].queryset = users.objects.filter(
                                                     ~Q(name__exact='admin')
@@ -62,14 +62,14 @@ class PostsForm(forms.ModelForm):
         self.fields['audience'].label = 'Visible to'
         self.fields['desc'].label = 'Post Desc'
         self.fields['audience'].queryset = users.objects.filter(
-                                                    ~Q(name__exact=usr.name)
-                                                    ).filter(
-                                                    ~Q(name__exact="admin")
+                                                    ~Q(name__exact=usr.name),
+                                                    name__in=[tempUsr.name for tempUsr in usr.groups.latest('id').members.all()],
                                                     )
+
     class Meta:
         model = PostsTable
         widgets = {
-                'desc': forms.Textarea(attrs={'class': 'textInput','rows':'3'}),
+                'desc': forms.Textarea(attrs={'class': 'textInput', 'rows': '3'}),
                 'audience': forms.CheckboxSelectMultiple(),
                 }
         exclude = (

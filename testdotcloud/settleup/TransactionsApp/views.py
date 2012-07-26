@@ -124,9 +124,12 @@ def display_users(request):              # {{{
         return redirect('/')
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
-    usersDBrows = users.objects.filter(deleted__exact=False).order_by("-outstanding")
-    displayType = "users"
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    usersDBrows = users.objects.filter(
+                                    deleted__exact=False,
+                                    name__in=[tempUsr.name for tempUsr in loggedInUser.groups.latest('id').members.all()]
+                                    ).order_by("-outstanding")
+    displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     #}}}
 
@@ -137,11 +140,9 @@ def display_notifications(request, *args):    # {{{
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if(args[0] == 'all'):
         object_list = PostsTable.objects.filter(
-                                            id__lte=loggedInUser.lastNotification.id
-                                            ).filter(
-                                            PostType__exact='noti'
-                                            ).filter(
-                                            audience__in=[loggedInUser.id]
+                                            id__lte=loggedInUser.lastNotification.id,
+                                            PostType__exact='noti',
+                                            audience__in=[loggedInUser.id],
                                             ).order_by(
                                             '-id'
                                             )
@@ -248,7 +249,7 @@ def delete_transactions(request, txn_id):    # {{{
             postObject.audience.add(usr)
         postObject.audience.add(txnTOdelete.user_paid)
         return redirect('/deleteTransactions/-1/')
-    txnsDBrows = transactions.objects.filter(deleted__exact=False)
+    txnsDBrows = transactions.objects.filter(deleted__exact=False, group__exact=loggedInUser.groups.latest('id'))
     deleteType = 'transactions'
     return render_to_response('delete.html', locals(), context_instance=RequestContext(request))
         # }}}
@@ -390,7 +391,7 @@ def group_home_page(request, grp):
     if request.method == 'POST':
         for i in request.POST['invites'].split(','):
             # make approval logic
-            current_group.members.add(users.objects.get(pk=i))
+            pass
     return render_to_response('groupHome.html', locals(), context_instance=RequestContext(request))
 
 
@@ -423,7 +424,7 @@ def transaction_create_display(request, kind):
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     if request.method == 'POST':
-        form = transactionsForm(request.POST)
+        form = transactionsForm(loggedInUser,request.POST)
         if form.is_valid():
             # retrieving the transactions object to populate the postObject field and the perpersoncost field
             transactionsObj = form.save()
@@ -466,7 +467,7 @@ def transaction_create_display(request, kind):
     else:
         # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
-        form = transactionsForm()
+        form = transactionsForm(loggedInUser)
         try:
             noOfNewNoti = PostsTable.objects.filter(
                                                     id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id

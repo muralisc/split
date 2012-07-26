@@ -28,13 +28,13 @@ $(document).ready(function () {
     <div class="span10">
 		<dl>
 			<dt>Name</dt>
-				<dd>{{current_group.name}}</dd>
+				<dd>{{loggedInUser.groups.all.0.name}}</dd>
 			<dt>Description</dt>
-				<dd>{{current_group.description}}</dd>
+				<dd>{{loggedInUser.groups.all.0.description}}</dd>
 			<dt>Admin</dt>
-				<dd>{% for i in current_group.adimns.all %}{{i}}<br/>{% endfor %}</dd>
+				<dd>{% for i in loggedInUser.groups.all.0.adimns.all %}{{i}}<br/>{% endfor %}</dd>
 			<dt>Members</dt>
-				<dd>{% for i in current_group.members.all %}{%if i not in current_group.adimns.all %}{{i}}<br/>{% endif %}{% endfor %}</dd>
+				<dd>{% for i in loggedInUser.groups.all.0.members.all %}{%if i not in loggedInUser.groups.all.0.adimns.all %}{{i}}<br/>{% endif %}{% endfor %}</dd>
 			<dt>Invite Members</dt>
 				<dd>
 					<form class="form" action="" method="post">

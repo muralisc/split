@@ -18,7 +18,7 @@ class transactionsForm(forms.ModelForm):   # {{{
         super(transactionsForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['users_involved'].queryset = users.objects.filter(
-                                                    Q(name__in=[tempUsr.name for tempUsr in usr.groups.latest('id').members.all()]),
+                                                    Q(name__in=[tempUsr.name for tempUsr in usr.group.members.all()]),
                                                     )
         self.fields['user_paid'].queryset = users.objects.filter(
                                                     ~Q(name__exact='admin')
@@ -47,7 +47,7 @@ class addUserForm(forms.ModelForm):  # {{{
                 'lastLogin',
                 'lastNotification',
                 'lastPost',
-                'groups',
+                'group',
                 )
         widgets = {
                 'password': forms.PasswordInput(),

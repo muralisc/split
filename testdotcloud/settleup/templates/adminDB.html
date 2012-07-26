@@ -44,7 +44,7 @@ Admin Page
                 <td>{{ row.lastLogin }}</td>
                 <td>{{ row.lastNotification }}</td>
                 <td>{{ row.lastPost }}</td>
-                <td>{% for grp in row.groups.all %}{{ grp.name }},{% endfor %}</td>
+                <td>{{ row.group.name }}</td>
                 <td><a href="/admin/editUser/{{ row.id }}/">edit</a></td>
                 <td><a href="/deleteUser/{{ row.id }}/">delete</a></td>
             </tr>

@@ -21,8 +21,12 @@ import itertools
 def login(request):  # {{{
     try:
         if request.session.get('sUserId', False):
-            userFullName = users.objects.get(pk=request.session['sUserId']).name
-            return redirect('/transactions/' + userFullName)
+            loggedInUser = users.objects.get(pk=request.session['sUserId'])
+            userFullName = loggedInUser.name
+            if (loggedInUser.group):
+                return redirect('/transactions/' + userFullName)
+            else:
+                return redirect('/home/')
     except KeyError:
         pass
     if request.method == 'POST':
@@ -127,7 +131,7 @@ def display_users(request):              # {{{
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     usersDBrows = users.objects.filter(
                                     deleted__exact=False,
-                                    name__in=[tempUsr.name for tempUsr in loggedInUser.groups.latest('id').members.all()]
+                                    name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()]
                                     ).order_by("-outstanding")
     displayType = "users"
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
@@ -249,7 +253,7 @@ def delete_transactions(request, txn_id):    # {{{
             postObject.audience.add(usr)
         postObject.audience.add(txnTOdelete.user_paid)
         return redirect('/deleteTransactions/-1/')
-    txnsDBrows = transactions.objects.filter(deleted__exact=False, group__exact=loggedInUser.groups.latest('id'))
+    txnsDBrows = transactions.objects.filter(deleted__exact=False, group__exact=loggedInUser.group)
     deleteType = 'transactions'
     return render_to_response('delete.html', locals(), context_instance=RequestContext(request))
         # }}}
@@ -407,6 +411,9 @@ def create_group(request):
             currentObject.save()
             currentObject.members.add(loggedInUser)
             currentObject.adimns.add(loggedInUser)
+            loggedInUser.group = currentObject
+            loggedInUser.save()
+            return redirect('/groupHome/'+currentObject.name)
             createPrompt = "Group created"
     form = GroupForm(None)
     return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
@@ -496,78 +503,86 @@ def transaction_create_display(request, kind):
             noOfNewPosts = 0
     userstable = users.objects.filter(deleted__exact=False)
     txnstable = transactions.objects.filter(deleted__exact=False)
-    rows = {}
-    for i in userstable:
-        # make the sample row dictionary for the "newtable"
-        rows.update({i.username: 0})
-    table = [dict(rows) for k in range(txnstable.count())]
-    i = 0
-    # fetch each transaction database row
-    for i, curtxn in enumerate(txnstable):
-        if i == 0:
-            table[i][curtxn.user_paid.username] += curtxn.amount
-            perpersoncost = curtxn.amount / curtxn.users_involved.count()
-            for usrinv in curtxn.users_involved.all():
-                table[i][usrinv.username] -= perpersoncost
-        if i != 0:
-            table[i][curtxn.user_paid.username] += curtxn.amount
-            perpersoncost = curtxn.amount / curtxn.users_involved.count()
-            for usrinv in curtxn.users_involved.all():
-                # populating "table" a list of dictionaries
-                table[i][usrinv.username] -= perpersoncost
-    newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
-    for i, I in enumerate(table):
-        for j, J in enumerate(userstable):
+    if txnstable:
+        rows = {}
+        for i in userstable:
+            # make the sample row dictionary for the "newtable"
+            rows.update({i.username: 0})
+        table = [dict(rows) for k in range(txnstable.count())]
+        i = 0
+        # fetch each transaction database row
+        for i, curtxn in enumerate(txnstable):
             if i == 0:
-                newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = table[i][J.username]
-            else:
-                newtable[i][j + 6] = table[i][J.username]
-                newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
-    for i, row in enumerate(txnstable):
-        newtable[i][0] = row.id
-        newtable[i][1] = row.description
-        newtable[i][2] = row.amount
-        newtable[i][3] = row.user_paid
-        newtable[i][4] = ''
-        for ui_rows in row.users_involved.all():
-            newtable[i][4] += ui_rows.username + ' '
-        newtable[i][5] = row.timestamp
-    request.session['downloadData'] = list(newtable)
-    # checking the url
-    if cmp(kind, 'all') == 0:
-        pass
-    # else get transctions of user alone
-    else:
-        currentUser = users.objects.get(name=kind)
-        # get txn ids of involved
-        txn_ids = currentUser.transactions_set1.values('id')
-        # get txn ids of paid
-        txn_ids1 = currentUser.transactions_set.values('id')
-        txn_ids_list = []
-        for i in txn_ids:
-            txn_ids_list.append(i['id'])
-        for i in txn_ids1:
-            # make a txn_ids_list
-            txn_ids_list.append(i['id'])
-        temp = newtable
-        # make "new" newtable form newtable
-        newtable = []
-        userpos = 0
-        for j in userstable:
-            if j.name == kind:
+                table[i][curtxn.user_paid.username] += curtxn.amount
+                perpersoncost = curtxn.amount / curtxn.users_involved.count()
+                for usrinv in curtxn.users_involved.all():
+                    table[i][usrinv.username] -= perpersoncost
+            if i != 0:
+                table[i][curtxn.user_paid.username] += curtxn.amount
+                perpersoncost = curtxn.amount / curtxn.users_involved.count()
+                for usrinv in curtxn.users_involved.all():
+                    # populating "table" a list of dictionaries
+                    table[i][usrinv.username] -= perpersoncost
+        newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
+        for i, I in enumerate(table):
+            for j, J in enumerate(userstable):
+                if i == 0:
+                    newtable[i][j + 6] = table[i][J.username]
+                    newtable[i][j + len(userstable) + 6] = table[i][J.username]
+                else:
+                    newtable[i][j + 6] = table[i][J.username]
+                    newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
+        for i, row in enumerate(txnstable):
+            newtable[i][0] = row.id
+            newtable[i][1] = row.description
+            newtable[i][2] = row.amount
+            newtable[i][3] = row.user_paid
+            newtable[i][4] = ''
+            for ui_rows in row.users_involved.all():
+                newtable[i][4] += ui_rows.username + ' '
+            newtable[i][5] = row.timestamp
+        request.session['downloadData'] = list(newtable)
+        # checking the url
+        if cmp(kind, 'all') == 0:
+            pass
+        # else get transctions of user alone
+        else:
+            currentUser = users.objects.get(name=kind)
+            # get txn ids of involved
+            txn_ids = currentUser.transactions_set1.values('id')
+            # get txn ids of paid
+            txn_ids1 = currentUser.transactions_set.values('id')
+            txn_ids_list = []
+            for i in txn_ids:
+                txn_ids_list.append(i['id'])
+            for i in txn_ids1:
+                # make a txn_ids_list
+                txn_ids_list.append(i['id'])
+            temp = newtable
+            # make "new" newtable form newtable
+            newtable = []
+            userpos = 0
+            for j in userstable:
+                if j.name == kind:
+                    userpos = userpos + 1
+                    break
                 userpos = userpos + 1
-                break
-            userpos = userpos + 1
-        usercount = len(userstable)
-        for i in temp:
-            if i[0] in txn_ids_list:
-                t = i[0:6]
-                t.append(i[5 + userpos])
-                t.append(i[5 + userpos + usercount])
-                newtable.append(t)
+            usercount = len(userstable)
+            for i in temp:
+                if i[0] in txn_ids_list:
+                    t = i[0:6]
+                    t.append(i[5 + userpos])
+                    t.append(i[5 + userpos + usercount])
+                    newtable.append(t)
+        for i, I in enumerate(newtable):
+            I[0] = i
+        newtable.reverse()
+    ### END OF if txnstable:
     # a ordered_userstable variable for link display in order
-    outstanding_userstable = users.objects.filter(deleted__exact=False).order_by('-outstanding')
+    outstanding_userstable = users.objects.filter(
+                                            deleted__exact=False,
+                                            name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()],
+                                            ).order_by('-outstanding')
     # calculate actual expenditure.
     actual_expenditure = list()
     for usr in outstanding_userstable:
@@ -575,11 +590,8 @@ def transaction_create_display(request, kind):
         if aaa != None:
             actual_expenditure.append(aaa)
         else:
-            actual_expenditure(0)
+            actual_expenditure.append(0)
     ordered_userstable = zip(outstanding_userstable, actual_expenditure)
-    for i, I in enumerate(newtable):
-        I[0] = i
-    newtable.reverse()
     # integrity checks
     sumOfAllOutstanding = 0
     for j in userstable:
@@ -621,8 +633,7 @@ def tab_click(request, grp_id):
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     try:
         current_group = GroupsTable.objects.get(pk=grp_id)
-        loggedInUser.groups.clear()
-        loggedInUser.groups.add(current_group)
+        loggedInUser.group = current_group
         loggedInUser.save()
     except:
         return redirect('/')

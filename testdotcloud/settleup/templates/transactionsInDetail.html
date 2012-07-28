@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block cur_title  %}
+Transactions In Detail
+{% endblock %}
+{% block current_head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+            $('#mytable').fixheadertable({
+                caption     : '{{ kind }} Transactions',
+                whiteSpace  : 'normal',
+                height      : 400,
+                width       : 800,
+                zebra       : true,
+                {% ifequal kind 'all'%}
+                minWidth    : 1400,
+                {% endifequal %}
+                addTitles	: true,
+                sortable    : true, 
+                });
+            $('table#side_table tr').superLink();
+
+            });
+</script>
+<!-- http://www.tablefixedheader.com/fullpagedemo/ -->
+ <script type="text/javascript" src="{{ STATIC_URL }}fixheadertable/javascript/jquery.fixheadertable.js"></script> 
+ <script type="text/javascript" src="{{ STATIC_URL }}superlink.jquery.js"></script> 
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/css/base.css" />
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/jquery-ui/css/ui-lightness/jquery-ui-1.8.4.custom.css" />
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span2">
+			{% include "navlist.html" %}
+		</div>
+		<div class="span8">
+			<table id="mytable">
+				<thead>
+					<tr>
+						<th>id</th>
+						<th>description</th>
+						<th>amount</th>
+						<th>user paid</th>
+						<th>users involved</th>
+						<th>timestamp</th>
+						{% if not userpos %}
+							{% for i in userstable %}
+							<th>{{ i.username }}</th>
+							{% endfor  %}
+							
+							{% for i in userstable %}
+							<th>{{ i.username|upper }}</th>
+							{% endfor  %}
+						{% else %}
+							<th>{{ kind }}</th>
+							<th>Cumulative {{ kind }}</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for i in newtable %}
+					<tr id="font4">
+						{% for j in i%}
+								<td>{% if j|floatformat %}
+											{{ j|floatformat }}
+									 {% else %}
+											{{ j }}
+									 {% endif %}
+								</td>
+						{% endfor%}
+					</tr>
+					{% endfor%}
+				</tbody>
+			</table>
+			<b><u>Integrity check</u></b><br/>
+			Sum of all outstanding [should be zero]= {{sumOfAllOutstanding}}	
+		</div>
+		<div class="span2">
+			<ul class="nav nav-list">
+				<li class="nav-header">Click on A name</li>
+				<li><a href="/transactionsInDetail/all/#table"><i class="icon-chevron-right"></i>All Transactions</a></li>
+				<table id="side_table" class="table table-condensed">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>spent</th>
+							<th>In pool</th>
+						</tr>
+					</thead>
+				{% for rows,exp in ordered_userstable  %}
+						<tr>
+							<td><a href="/transactionsInDetail/{{rows.name}}/#table">{{rows.username|add:""}}</a></td>
+							<td>{{ exp|floatformat }}</td>
+							<td>{{rows.outstanding|floatformat}}</td>
+						</tr>
+				{%endfor%}
+				</table>
+				<li><a href="/download/"><i class="icon-chevron-right"></i>DOWNLOAD DB</a></li>
+			</ul>
+		</div>
+	</div>	
+</div>
+{% endblock %}
+
+

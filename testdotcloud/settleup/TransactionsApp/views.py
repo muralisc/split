@@ -45,8 +45,10 @@ def login(request):  # {{{
                 loggedInUser.save()
                 if memberQuerySet[0].name == 'admin':
                     return redirect('/admin')
-                else:
+                elif (loggedInUser.group):
                     return redirect('/transactions/' + loggedInUser.name)
+                else:
+                    return redirect('/home/')
     form = loginForm()
     return render_to_response('login.html', locals(), context_instance=RequestContext(request))
     #}}}
@@ -61,9 +63,42 @@ def logout(request):  # {{{
     #}}}
 
 
-def create_user(request):                    # {{{
+def calculator(request, exp):       # {{{
+    response = urllib.urlopen('http://www.google.com/ig/calculator?q=' + urllib.quote(exp))
+    html = response.read()
+    error = re.findall(r'error: "(.*?)"', html)
+    result = re.findall(r'rhs: "(.*?)"', html)
+    result = re.sub('\xa0', '', result[0])
+    if error != [""] and error != ['0'] and error != ['4']:
+        result = error
+    return HttpResponse(result)
+        # }}}
+
+
+def create_group(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    userFullName = users.objects.get(pk=request.session['sUserId']).name
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if request.method == 'POST':
-        form = addUserForm(request.POST)
+        form = GroupForm(request.POST or None)
+        if form.is_valid():
+            currentObject = form.save(commit=False)
+            currentObject.save()
+            currentObject.members.add(loggedInUser)
+            currentObject.adimns.add(loggedInUser)
+            loggedInUser.group = currentObject
+            loggedInUser.save()
+            return redirect('/groupHome/' + currentObject.name)
+            createPrompt = "Group created"
+    form = GroupForm(None)
+    return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
+
+
+def create_user(request):                    # {{{
+    form = addUserForm()
+    if request.method == 'POST':
+        form = addUserForm(request.POST or None)
         if form.is_valid():
             # if another user with the same username does not exist
             if users.objects.filter(username__exact=form.cleaned_data['username']).count() == 0:
@@ -85,12 +120,12 @@ def create_user(request):                    # {{{
                     currentUserObject.lastPost = None
                 currentUserObject.lastLogin = datetime.datetime.now()
                 currentUserObject.save()
+                form = addUserForm()
                 createUserPrompt = "User added.Login to continue"
             else:
                 createUserPrompt = "Username alredy exist. please chose a new one"
         else:
             pass
-    form = addUserForm()
     return render_to_response('addUser.html', locals(), context_instance=RequestContext(request))
                                          #}}}
 
@@ -174,46 +209,63 @@ def display_notifications(request, *args):    # {{{
             # }}}
 
 
-#login controll left TODO
-class DisplayPosts(ListView):  # {{{
+def display_posts(request, *args):    # {{{
     template_name = "display.html"
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    if(args[0] == 'all'):
+        object_list = PostsTable.objects.order_by(
+                                            '-timestamp'
+                                            ).filter(
+                                            PostType__exact='post',
+                                            id__lte=loggedInUser.lastPost.id
+                                            ).filter(
+                                            audience__in=[loggedInUser.id]
+                                            )
 
-    def get_queryset(self):
-        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
-        if(self.args[0] == 'all'):
-            return PostsTable.objects.order_by(
-                                                '-timestamp'
-                                              ).filter(
+    if(loggedInUser.lastPost):
+        object_list_new = PostsTable.objects.filter(
+                                            id__gt=loggedInUser.lastPost.id
+                                            ).filter(
+                                            PostType__exact='post'
+                                            ).filter(
+                                            audience__in=[loggedInUser.id]
+                                            )
+    try:
+        loggedInUser.lastPost = PostsTable.objects.filter(
                                                 PostType__exact='post'
-                                              ).filter(
-                                              audience__in=[loggedInUser.id]
-                                              )
-
-    def get_context_data(self, **kwargs):
-        loggedInUser = users.objects.get(pk=self.request.session['sUserId'])
-        context = super(DisplayPosts, self).get_context_data(**kwargs)
-        if(loggedInUser.lastPost):
-            context['object_list_new'] = PostsTable.objects.filter(
-                                                        id__gt=loggedInUser.lastPost.id
-                                                        ).filter(
-                                                        PostType__exact='post'
-                                                        ).filter(
-                                                        audience__in=[loggedInUser.id]
-                                                        )
-        try:
-            loggedInUser.lastPost = PostsTable.objects.filter(
-                                                    PostType__exact='post'
-                                                    ).latest('id')
-        except PostsTable.DoesNotExist:
-            pass
-        loggedInUser.save()
-        context['displayType'] = 'posts'
-        context['userFullName'] = users.objects.get(pk=self.request.session['sUserId']).name
-        return context
+                                                ).latest('id')
+    except PostsTable.DoesNotExist:
+        pass
+    loggedInUser.save()
+    displayType = 'notifications'
+    userFullName = users.objects.get(pk=request.session['sUserId']).name
+    return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     # }}}
 
 
 #========================================================
+
+
+def download_as_csv(request):   # {{{
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    else:
+        return redirect('/')
+    if 'downloadData' in request.session:
+        # Create the HttpResponse object with the appropriate CSV header.
+        response = HttpResponse(mimetype='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=somefilename.csv'
+        newtable = request.session['downloadData']
+        del request.session['downloadData']
+        userstable = list(users.objects.filter(deleted__exact=False).all())
+        writer = csv.writer(response)
+        writer.writerow(["id", "DESCRIPTION", "AMOUNT", "PAID BY", "PAID FOR", "TIME"] + userstable + userstable)
+        for i in range(len(newtable)):
+            writer.writerow(newtable[i])
+        return response
+    else:
+        return redirect('/displayTransactions/all/')
+            # }}}
 
 
 def delete_transactions(request, txn_id):    # {{{
@@ -259,42 +311,6 @@ def delete_transactions(request, txn_id):    # {{{
         # }}}
 
 
-def settle_grp(request):  # {{{
-    if 'sUserId' not in request.session:
-        return redirect('/')
-    else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-    loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    usersDBrows = users.objects.filter(deleted__exact=False).order_by('-outstanding')
-    settleUPlist = []
-    settleUPTextlist = []
-    for i in usersDBrows:
-        settleUPlist.append([i.username, i.outstanding])
-    while (len(settleUPlist) != 1):
-        n = len(settleUPlist)
-        if(abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1]) >= 0):
-            settleUPTextlist.append(settleUPlist[n - 1][0] + '->' + settleUPlist[0][0] + ' ' + str(abs(settleUPlist[n - 1][1])))
-            settleUPlist[0][1] = abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1])
-            settleUPlist.pop()
-        else:
-            settleUPTextlist.append(settleUPlist[n - 1][0] + '->' + settleUPlist[0][0] + ' ' + str(abs(settleUPlist[0][1])))
-            settleUPlist[n - 1][1] = abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1])
-            settleUPlist.pop(0)
-        #sort the remainig list
-        for j in range(0, len(settleUPlist) - 1):
-            temp = settleUPlist[j][1]
-            loc = j
-            for k in range(j + 1, len(settleUPlist) - 1):
-                if(settleUPlist[k][1] > temp):
-                    temp = settleUPlist[k][1]
-                    loc = k
-            temp = settleUPlist[loc]
-            settleUPlist[loc] = settleUPlist[j]
-            settleUPlist[j] = temp
-    return render_to_response('settleUP.html', locals(), context_instance=RequestContext(request))
-                        #}}}
-
-
 def fetch_quote(request):  # {{{
     htmlData = urllib.urlopen('https://dl.dropbox.com/s/6tr3kur4826zwpy/quotes.txt').read()
     htmlData = unicode(htmlData, "utf-8")
@@ -314,111 +330,6 @@ def fetch_quote(request):  # {{{
     #}}}
 
 
-# TODO consolidate the database
-# create a logs table
-# user settings
-
-def download_as_csv(request):   # {{{
-    if request.session.get('sUserId', False):
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-    else:
-        return redirect('/')
-    if 'downloadData' in request.session:
-        # Create the HttpResponse object with the appropriate CSV header.
-        response = HttpResponse(mimetype='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=somefilename.csv'
-        newtable = request.session['downloadData']
-        del request.session['downloadData']
-        userstable = list(users.objects.filter(deleted__exact=False).all())
-        writer = csv.writer(response)
-        writer.writerow(["id", "DESCRIPTION", "AMOUNT", "PAID BY", "PAID FOR", "TIME"] + userstable + userstable)
-        for i in range(len(newtable)):
-            writer.writerow(newtable[i])
-        return response
-    else:
-        return redirect('/displayTransactions/all/')
-            # }}}
-
-
-def calculator(request, exp):       # {{{
-    response = urllib.urlopen('http://www.google.com/ig/calculator?q=' + urllib.quote(exp))
-    html = response.read()
-    error = re.findall(r'error: "(.*?)"', html)
-    result = re.findall(r'rhs: "(.*?)"', html)
-    result = re.sub('\xa0', '', result[0])
-    if error != [""] and error != ['0'] and error != ['4']:
-        result = error
-    return HttpResponse(result)
-        # }}}
-
-
-def user_password_change(request):                    # {{{
-    # checking if logged in
-    if request.session.get('sUserId', False):
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-    else:
-        return redirect('/')
-    loggedInUser = users.objects.get(id=request.session['sUserId'])
-    form = PasswordChangeForm(request.POST or None)
-    if request.method == 'POST':
-        if form.is_valid():
-            if loggedInUser.password == form.cleaned_data['oldPassword']:
-                loggedInUser.password = form.cleaned_data['newPassword']
-                loggedInUser.save()
-                return redirect('/')  # TODO go to user profile
-            else:
-                userPrompt = "wrong old password"
-        else:
-
-            pass
-    return render_to_response('userPasswordChange.html', locals(), context_instance=RequestContext(request))
-                                         #}}}
-
-
-def home_page(request):
-    if request.session.get('sUserId', False):
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-        loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    else:
-        return redirect('/')
-    user_groups = loggedInUser.groupsTable_members.all()
-    return render_to_response('home.html', locals(), context_instance=RequestContext(request))
-
-
-def group_home_page(request, grp):
-    if request.session.get('sUserId', False):
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
-        loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    else:
-        return redirect('/')
-    user_groups = loggedInUser.groupsTable_members.all()
-    if request.method == 'POST':
-        for i in request.POST['invites'].split(','):
-            # make approval logic
-            pass
-    return render_to_response('groupHome.html', locals(), context_instance=RequestContext(request))
-
-
-def create_group(request):
-    if 'sUserId' not in request.session:
-        return redirect('/')
-    userFullName = users.objects.get(pk=request.session['sUserId']).name
-    loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    if request.method == 'POST':
-        form = GroupForm(request.POST or None)
-        if form.is_valid():
-            currentObject = form.save(commit=False)
-            currentObject.save()
-            currentObject.members.add(loggedInUser)
-            currentObject.adimns.add(loggedInUser)
-            loggedInUser.group = currentObject
-            loggedInUser.save()
-            return redirect('/groupHome/'+currentObject.name)
-            createPrompt = "Group created"
-    form = GroupForm(None)
-    return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
-
-
 def transaction_create_display(request, kind):
     """
     displays and process a new transaction form
@@ -431,7 +342,7 @@ def transaction_create_display(request, kind):
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     if request.method == 'POST':
-        form = transactionsForm(loggedInUser,request.POST)
+        form = transactionsForm(loggedInUser, request.POST)
         if form.is_valid():
             # retrieving the transactions object to populate the postObject field and the perpersoncost field
             transactionsObj = form.save()
@@ -461,7 +372,7 @@ def transaction_create_display(request, kind):
                             PostType='noti',
                                     )
             postObject.save()
-            # 'loggedinuser' is put here because it interfears with the save
+            # 'loggedInUser' is put here because it interfears with the save
             # operation at updating the user objects outstanding field
             loggedInUser = users.objects.get(pk=request.session['sUserId'])
             loggedInUser.lastNotification = postObject
@@ -473,7 +384,6 @@ def transaction_create_display(request, kind):
             return redirect('/transactions/' + userFullName + '/')
     else:
         # for a fresh load of url
-        loggedInUser = users.objects.get(pk=request.session['sUserId'])
         form = transactionsForm(loggedInUser)
         try:
             noOfNewNoti = PostsTable.objects.filter(
@@ -501,8 +411,20 @@ def transaction_create_display(request, kind):
                 loggedInUser.lastPost = PostsTable.objects.latest('id')
                 loggedInUser.save()
             noOfNewPosts = 0
-    userstable = users.objects.filter(deleted__exact=False)
-    txnstable = transactions.objects.filter(deleted__exact=False)
+    return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
+
+
+def transaction_detail(request, kind):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    if not loggedInUser.group:
+        return redirect('/home/')
+    userstable = users.objects.filter(deleted__exact=False,
+                                            name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()])
+    txnstable = transactions.objects.filter(deleted__exact=False, group=loggedInUser.group)
     if txnstable:
         rows = {}
         for i in userstable:
@@ -578,6 +500,10 @@ def transaction_create_display(request, kind):
             I[0] = i
         newtable.reverse()
     ### END OF if txnstable:
+    # integrity checks
+    sumOfAllOutstanding = 0
+    for j in userstable:
+        sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
     # a ordered_userstable variable for link display in order
     outstanding_userstable = users.objects.filter(
                                             deleted__exact=False,
@@ -592,49 +518,27 @@ def transaction_create_display(request, kind):
         else:
             actual_expenditure.append(0)
     ordered_userstable = zip(outstanding_userstable, actual_expenditure)
-    # integrity checks
-    sumOfAllOutstanding = 0
-    for j in userstable:
-        sumOfAllOutstanding = sumOfAllOutstanding + j.outstanding
-    return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
+    return render_to_response('transactionsInDetail.html', locals(), context_instance=RequestContext(request))
 
 
-def search(request, kind):
-    if kind == 'users':
-        searchQuery = request.GET['q']
-        resultQuerySet = users.objects.filter(Q(name__icontains=searchQuery) | Q(username__icontains=searchQuery))
-        resultList = list()
-        for res in itertools.chain(resultQuerySet):
-            resultList.append({"id": res.pk, "name": res.name})
-        result = JSONEncoder().encode(resultList)
-        return HttpResponse(result)
-    if kind == 'groups':
-        searchQuery = request.GET['query']
-        resultQuerySet = GroupsTable.objects.filter(Q(name__icontains=searchQuery))
-        resultSuggession = list()
-        resultData = list()
-        for res in itertools.chain(resultQuerySet):
-            resultSuggession.append(res.name)
-            resultData.append(res.pk)
-        resultDict = {
-                        'query': searchQuery,
-                        'suggestions': resultSuggession,
-                        'data': resultData
-                    }
-        result = JSONEncoder().encode(resultDict)
-        return HttpResponse(result)
-
-
-# TODO convet posts table to prompts table
-# TODO convet adimns to admins
-# TODO convet user groups to foregin key
-
-def tab_click(request, grp_id):
-    loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    try:
-        current_group = GroupsTable.objects.get(pk=grp_id)
-        loggedInUser.group = current_group
-        loggedInUser.save()
-    except:
+def user_password_change(request):                    # {{{
+    # checking if logged in
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    else:
         return redirect('/')
-    return HttpResponse("done")
+    loggedInUser = users.objects.get(id=request.session['sUserId'])
+    form = PasswordChangeForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            if loggedInUser.password == form.cleaned_data['oldPassword']:
+                loggedInUser.password = form.cleaned_data['newPassword']
+                loggedInUser.save()
+                return redirect('/')  # TODO go to user profile
+            else:
+                userPrompt = "wrong old password"
+        else:
+
+            pass
+    return render_to_response('userPasswordChange.html', locals(), context_instance=RequestContext(request))
+                                         #}}}

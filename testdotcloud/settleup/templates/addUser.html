@@ -15,9 +15,15 @@ New User
         <form class="well" action="" method="post">
             {% csrf_token %}
             <table>
-                {{ form.as_table }}
-            </table>
-            <div class="form-actions">
+            {% for field in form %}
+				<tr class="fieldWrapper">
+					<td>{{ field.label_tag }}</td>
+					<td>{{ field }}</td>
+					<td>{{ field.errors }}</td>
+				</tr>
+			{% endfor %}
+			</table>
+			<div class="form-actions">
                 <button class="btn" type="submit">add User</button>
             </div>
         </form>

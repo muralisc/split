@@ -21,13 +21,13 @@ class transactionsForm(forms.ModelForm):   # {{{
                                                     Q(name__in=[tempUsr.name for tempUsr in usr.group.members.all()]),
                                                     )
         self.fields['user_paid'].queryset = users.objects.filter(
-                                                    ~Q(name__exact='admin')
+                                                    Q(name__in=[tempUsr.name for tempUsr in usr.group.members.all()]),
                                                     )
 
     class Meta:
         model = transactions
         widgets = {
-                'description': forms.Textarea(attrs={'class': '', 'rows': '1', 'placeholder': 'Description'}),
+                'description': forms.TextInput(attrs={'class': '', 'rows': '1', 'placeholder': 'Category'}),
                 'amount': forms.TextInput(attrs={'class': '', 'placeholder': 'Amount'}),
                 'users_involved': forms.CheckboxSelectMultiple(),
                 }
@@ -63,7 +63,7 @@ class PostsForm(forms.ModelForm):
         self.fields['desc'].label = 'Post Desc'
         self.fields['audience'].queryset = users.objects.filter(
                                                     ~Q(name__exact=usr.name),
-                                                    name__in=[tempUsr.name for tempUsr in usr.groups.latest('id').members.all()],
+                                                    name__in=[tempUsr.name for tempUsr in usr.group.members.all()],
                                                     )
 
     class Meta:

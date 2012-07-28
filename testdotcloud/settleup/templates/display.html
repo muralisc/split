@@ -83,10 +83,10 @@ Display {{ displayType }}
                     {% for row in object_list_new %}
                     <tr>
                         <td>
-                            {{ row.desc }}::
-                            <b>{{ row.author }}</b> 
-                        </td>
-                        <td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
+							<b>{{ row.author }} says:</b> 
+							{{ row.desc }}
+						</td>
+						<td>{% for ui_rows in row.audience.all  %}{{ui_rows.username|add:" "}}{%endfor%}</td>
                         <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
                     </tr>
                     {% endfor %}

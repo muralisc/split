@@ -82,7 +82,7 @@ Transactions In Detail
 		<div class="span2">
 			<ul class="nav nav-list">
 				<li class="nav-header">Click on A name</li>
-				<li><a href="/transactionsInDetail/all/#table"><i class="icon-chevron-right"></i>All Transactions</a></li>
+				<li><a href="/transactionsInDetail/all/"><i class="icon-chevron-right"></i>All Transactions</a></li>
 				<table id="side_table" class="table table-condensed">
 					<thead>
 						<tr>
@@ -93,7 +93,7 @@ Transactions In Detail
 					</thead>
 				{% for rows,exp in ordered_userstable  %}
 						<tr>
-							<td><a href="/transactionsInDetail/{{rows.name}}/#table">{{rows.username|add:""}}</a></td>
+							<td><a href="/transactionsInDetail/{{rows.name}}/">{{rows.username|add:""}}</a></td>
 							<td>{{ exp|floatformat }}</td>
 							<td>{{rows.outstanding|floatformat}}</td>
 						</tr>

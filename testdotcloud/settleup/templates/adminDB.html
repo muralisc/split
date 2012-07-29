@@ -2,6 +2,40 @@
 {% block cur_title  %}
 Admin Page
 {% endblock %}
+{% block current_head %}
+<script type="text/javascript">
+    $(document).ready(function() {
+            $('#userdb').fixheadertable({
+                caption     : 'User Database',
+                whiteSpace  : 'normal',
+                colratio    : [50, 100, 100, 100, 120, 100, 60, 120, 120, 120, 70, 70, 70],
+				height      : 370,
+                width       : 1200,
+                zebra       : true,
+                resizeCol   : true,
+				addTitles	: true,
+                sortable    : true, 
+                sortType    : ['integer', 'string', 'string', 'string', 'string','integer', 'string', 'date','integer','integer', 'string', 'string', 'string'],
+				});
+            $('#txndb').fixheadertable({
+                caption     : 'Txn Database',
+                whiteSpace  : 'normal',
+                colratio    : [50, 100, 70, 100, 250, 150, 100, 120, 120, 120],
+				height      : 400,
+                width       : 1200,
+                zebra       : true,
+                resizeCol   : true,
+				addTitles	: true,
+                sortable    : true, 
+                sortType    : ['integer', 'string', 'string', 'string', 'string','integer', 'string', 'date','integer','integer', 'string', 'string', 'string'],
+				});
+            });
+</script>
+<!-- http://www.tablefixedheader.com/fullpagedemo/ -->
+ <script type="text/javascript" src="{{ STATIC_URL }}fixheadertable/javascript/jquery.fixheadertable.js"></script> 
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/css/base.css" />
+ <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fixheadertable/jquery-ui/css/ui-lightness/jquery-ui-1.8.4.custom.css" />
+{% endblock %}
 {% block content %}
 <div class="row-fluid">
     <div class="span2">
@@ -13,8 +47,7 @@ Admin Page
 <div class="row-fluid">
     <div class="span10">
         <!-- {{{ user display -->
-        <table class="table table-condensed table-bordered">
-            Users Database
+        <table id="userdb" class="table table-condensed table-bordered">
             <thead>
                 <tr>
                     <th>id</th>
@@ -52,7 +85,7 @@ Admin Page
         </table>
         <!-- }}}-->
         <!-- {{{ transactions display -->
-        <table class="table table-condensed table-bordered">
+        <table id="txndb" class="table table-condensed table-bordered">
             transactions Database
             <thead>
                 <tr>

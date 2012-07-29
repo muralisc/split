@@ -17,6 +17,7 @@ from json import JSONEncoder
 import itertools
 
 # use celery for maximum asyncing TODO optimise the transaction detail function
+# make admin page good
 
 def login(request):  # {{{
     try:
@@ -180,13 +181,14 @@ def display_notifications(request, *args):    # {{{
         return redirect('/')
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if(args[0] == 'all'):
-        object_list = PostsTable.objects.filter(
-                                            id__lte=loggedInUser.lastNotification.id,
-                                            PostType__exact='noti',
-                                            audience__in=[loggedInUser.id],
-                                            ).order_by(
-                                            '-id'
-                                            )
+        if(loggedInUser.lastNotification):
+            object_list = PostsTable.objects.filter(
+                                                id__lte=loggedInUser.lastNotification.id,
+                                                PostType__exact='noti',
+                                                audience__in=[loggedInUser.id],
+                                                ).order_by(
+                                                '-id'
+                                                )
     if(loggedInUser.lastNotification):
         object_list_new = PostsTable.objects.filter(
                                             id__gt=loggedInUser.lastNotification.id
@@ -215,14 +217,15 @@ def display_posts(request, *args):    # {{{
     template_name = "display.html"
     loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if(args[0] == 'all'):
-        object_list = PostsTable.objects.order_by(
-                                            '-timestamp'
-                                            ).filter(
-                                            PostType__exact='post',
-                                            id__lte=loggedInUser.lastPost.id
-                                            ).filter(
-                                            audience__in=[loggedInUser.id]
-                                            )
+        if(loggedInUser.lastPost):
+            object_list = PostsTable.objects.order_by(
+                                                '-timestamp'
+                                                ).filter(
+                                                PostType__exact='post',
+                                                id__lte=loggedInUser.lastPost.id
+                                                ).filter(
+                                                audience__in=[loggedInUser.id]
+                                                )
 
     if(loggedInUser.lastPost):
         object_list_new = PostsTable.objects.filter(
@@ -532,7 +535,7 @@ def transaction_create_display(request, kind):
             changeList.append(changeDict[usr.name])
         del request.session['changeDict']
     else:
-        changeList = [0]*outstanding_userstable.count()
+        changeList = [0] * outstanding_userstable.count()
     outstanding_userstable = zip(outstanding_userstable, changeList)
     return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
 

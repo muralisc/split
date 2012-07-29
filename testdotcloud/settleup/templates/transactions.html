@@ -28,7 +28,7 @@ Transaction
                     $('#calcu').text('കണക്കു കൂടുന്നു ');
                     });
 
-            $("label:contains('involved')").html("Users Involved<br/><input type='checkbox' id='selectAll'> Select All");
+            $("label:contains('involved')").html("Users Involved <input type='checkbox' id='selectAll'> Select All");
             // toggle when select all is clicked
             $('#selectAll').click(function() {
                 $("input[name='users_involved']").attr('checked',this.checked);
@@ -70,7 +70,8 @@ Transaction
 		<div class="span2">
 			{% include "navlist.html" %}
 		</div>
-		<div class="span7">
+		<div class="span1"></div>
+		<div class="span4">
 			{% ifnotequal  noOfNewNoti 0 %}
 			<a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
 			{% endifnotequal %}
@@ -79,20 +80,12 @@ Transaction
 			{% endifnotequal %}
 			<form action="" method="post" class="well">
 			   {% csrf_token %}
-				<table class="table ">
-					<tr>
-						<td>{{form.description}}{{form.description.errors}}</td>
-						<td>{{form.amount}}{{form.amount.errors}}</td>
-					</tr>
-					<tr>
-						<td>{{form.user_paid.label}}</td>
-						<td>{{form.user_paid}}{{form.user_paid.errors}}</td>
-					</tr>
-					<tr>
-						<td>{{form.users_involved.label_tag}}</td>
-						<td>{{form.users_involved}}{{form.users_involved.errors}}</td>
-					</tr>
-				</table>
+				<div>{{form.description}}{{form.description.errors}}</div>
+				<div>{{form.amount}}{{form.amount.errors}}</div>
+				<div>{{form.user_paid.label}}</div>
+				<div>{{form.user_paid}}{{form.user_paid.errors}}</div>
+				<div>{{form.users_involved.label_tag}}</div>
+				<div>{{form.users_involved}}{{form.users_involved.errors}}</div>
 				<input  class="btn" type="Submit" value = "Submit"/>
 			</form>
 		</div>

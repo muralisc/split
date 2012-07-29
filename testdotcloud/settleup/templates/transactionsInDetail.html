@@ -61,12 +61,16 @@ Transactions In Detail
 					{% for i in newtable %}
 					<tr id="font4">
 						{% for j in i%}
+								{% if forloop.first %}
+								<td> {{ forloop.parentloop.revcounter}}</td>
+								{% else %}
 								<td>{% if j|floatformat %}
 											{{ j|floatformat }}
 									 {% else %}
 											{{ j }}
 									 {% endif %}
 								</td>
+								{% endif %}
 						{% endfor%}
 					</tr>
 					{% endfor%}

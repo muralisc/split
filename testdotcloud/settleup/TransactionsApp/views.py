@@ -1,6 +1,5 @@
 # Django imports
 from django.shortcuts import render_to_response, redirect
-from django.views.generic import ListView
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.db.models import Q
@@ -17,6 +16,7 @@ import datetime
 from json import JSONEncoder
 import itertools
 
+#samoperson in multiple groups TODO
 
 def login(request):  # {{{
     try:
@@ -330,6 +330,104 @@ def fetch_quote(request):  # {{{
     #}}}
 
 
+def group_home_page(request, grp):
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    else:
+        return redirect('/')
+    user_groups = loggedInUser.groupsTable_members.all()
+    if request.method == 'POST':
+        for i in request.POST['invites'].split(','):
+            loggedInUser.group.members.add(users.objects.get(pk=i))
+    return render_to_response('groupHome.html', locals(), context_instance=RequestContext(request))
+
+
+def home_page(request):
+    if request.session.get('sUserId', False):
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    else:
+        return redirect('/')
+    user_groups = loggedInUser.groupsTable_members.all()
+    return render_to_response('home.html', locals(), context_instance=RequestContext(request))
+
+
+def search(request, kind):
+    if kind == 'users':
+        searchQuery = request.GET['q']
+        resultQuerySet = users.objects.filter(Q(name__icontains=searchQuery) | Q(username__icontains=searchQuery))
+        resultList = list()
+        for res in itertools.chain(resultQuerySet):
+            resultList.append({"id": res.pk, "name": res.name})
+        result = JSONEncoder().encode(resultList)
+        return HttpResponse(result)
+    if kind == 'groups':
+        searchQuery = request.GET['query']
+        resultQuerySet = GroupsTable.objects.filter(Q(name__icontains=searchQuery))
+        resultSuggession = list()
+        resultData = list()
+        for res in itertools.chain(resultQuerySet):
+            resultSuggession.append(res.name)
+            resultData.append(res.pk)
+        resultDict = {
+                        'query': searchQuery,
+                        'suggestions': resultSuggession,
+                        'data': resultData
+                    }
+        result = JSONEncoder().encode(resultDict)
+        return HttpResponse(result)
+
+
+def settle_grp(request):  # {{{
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        userFullName = users.objects.get(pk=request.session['sUserId']).name
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    usersDBrows = users.objects.filter(deleted__exact=False,
+                                    name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()]
+                                    ).order_by('-outstanding')
+    settleUPlist = []
+    settleUPTextlist = []
+    for i in usersDBrows:
+        settleUPlist.append([i.username, i.outstanding])
+    while (len(settleUPlist) != 1):
+        n = len(settleUPlist)
+        if(abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1]) >= 0):
+            settleUPTextlist.append(settleUPlist[n - 1][0] + '->' + settleUPlist[0][0] + ' ' + str(abs(settleUPlist[n - 1][1])))
+            settleUPlist[0][1] = abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1])
+            settleUPlist.pop()
+        else:
+            settleUPTextlist.append(settleUPlist[n - 1][0] + '->' + settleUPlist[0][0] + ' ' + str(abs(settleUPlist[0][1])))
+            settleUPlist[n - 1][1] = abs(settleUPlist[0][1]) - abs(settleUPlist[n - 1][1])
+            settleUPlist.pop(0)
+        #sort the remainig list
+        for j in range(0, len(settleUPlist) - 1):
+            temp = settleUPlist[j][1]
+            loc = j
+            for k in range(j + 1, len(settleUPlist) - 1):
+                if(settleUPlist[k][1] > temp):
+                    temp = settleUPlist[k][1]
+                    loc = k
+            temp = settleUPlist[loc]
+            settleUPlist[loc] = settleUPlist[j]
+            settleUPlist[j] = temp
+    return render_to_response('settleUP.html', locals(), context_instance=RequestContext(request))
+                        #}}}
+
+
+def tab_click(request, grp_id):
+    loggedInUser = users.objects.get(pk=request.session['sUserId'])
+    try:
+        current_group = GroupsTable.objects.get(pk=grp_id)
+        loggedInUser.group = current_group
+        loggedInUser.save()
+    except:
+        return redirect('/')
+    return HttpResponse("done")
+
+
 def transaction_create_display(request, kind):
     """
     displays and process a new transaction form
@@ -342,7 +440,7 @@ def transaction_create_display(request, kind):
     else:
         userFullName = users.objects.get(pk=request.session['sUserId']).name
     if request.method == 'POST':
-        form = transactionsForm(loggedInUser, request.POST)
+        form = transactionsForm(users.objects.get(pk=request.session['sUserId']), request.POST)
         if form.is_valid():
             # retrieving the transactions object to populate the postObject field and the perpersoncost field
             transactionsObj = form.save()
@@ -384,6 +482,7 @@ def transaction_create_display(request, kind):
             return redirect('/transactions/' + userFullName + '/')
     else:
         # for a fresh load of url
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
         form = transactionsForm(loggedInUser)
         try:
             noOfNewNoti = PostsTable.objects.filter(
@@ -411,6 +510,7 @@ def transaction_create_display(request, kind):
                 loggedInUser.lastPost = PostsTable.objects.latest('id')
                 loggedInUser.save()
             noOfNewPosts = 0
+    txnstable = transactions.objects.filter(deleted__exact=False, group=loggedInUser.group).order_by('-timestamp')
     return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
 
 
@@ -469,6 +569,7 @@ def transaction_detail(request, kind):
             pass
         # else get transctions of user alone
         else:
+            # dont confuse with loggedInUser :P
             currentUser = users.objects.get(name=kind)
             # get txn ids of involved
             txn_ids = currentUser.transactions_set1.values('id')
@@ -496,8 +597,6 @@ def transaction_detail(request, kind):
                     t.append(i[5 + userpos])
                     t.append(i[5 + userpos + usercount])
                     newtable.append(t)
-        for i, I in enumerate(newtable):
-            I[0] = i
         newtable.reverse()
     ### END OF if txnstable:
     # integrity checks

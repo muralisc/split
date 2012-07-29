@@ -16,7 +16,9 @@ import datetime
 from json import JSONEncoder
 import itertools
 
-#samoperson in multiple groups TODO
+# samoperson in multiple groups TODO
+# use celery for maximum asyncing TODO optimise the transaction detail function
+# update outstanding of each user wile switching group TODO
 
 def login(request):  # {{{
     try:
@@ -24,6 +26,7 @@ def login(request):  # {{{
             loggedInUser = users.objects.get(pk=request.session['sUserId'])
             userFullName = loggedInUser.name
             if (loggedInUser.group):
+                update_outstanding(loggedInUser.group)
                 return redirect('/transactions/' + userFullName)
             else:
                 return redirect('/home/')
@@ -46,6 +49,7 @@ def login(request):  # {{{
                 if memberQuerySet[0].name == 'admin':
                     return redirect('/admin')
                 elif (loggedInUser.group):
+                    update_outstanding(loggedInUser.group)
                     return redirect('/transactions/' + loggedInUser.name)
                 else:
                     return redirect('/home/')
@@ -423,6 +427,7 @@ def tab_click(request, grp_id):
         current_group = GroupsTable.objects.get(pk=grp_id)
         loggedInUser.group = current_group
         loggedInUser.save()
+        update_outstanding(current_group)
     except:
         return redirect('/')
     return HttpResponse("done")
@@ -611,7 +616,9 @@ def transaction_detail(request, kind):
     # calculate actual expenditure.
     actual_expenditure = list()
     for usr in outstanding_userstable:
-        aaa = usr.transactions_set1.aggregate(Sum('perpersoncost'))['perpersoncost__sum']
+        aaa = usr.transactions_set1.filter(
+                                    group=loggedInUser.group,
+                                    ).aggregate(Sum('perpersoncost'))['perpersoncost__sum']
         if aaa != None:
             actual_expenditure.append(aaa)
         else:
@@ -641,3 +648,17 @@ def user_password_change(request):                    # {{{
             pass
     return render_to_response('userPasswordChange.html', locals(), context_instance=RequestContext(request))
                                          #}}}
+
+# HELPER functions--------------------------------------------------------------
+def update_outstanding(current_group):
+    for usr in current_group.members.all():
+        #for all the transaction in which 'usr' paid
+        tempTxns = usr.transactions_set.filter(group=current_group)
+        usr.outstanding = sum([i._get_user_paid_cost() for i in tempTxns])
+        #for all the transaction in which 'usr' was jsut a member
+        tempsum = usr.transactions_set1.filter(~Q(pk__in=[i.pk for i in tempTxns]),
+                group=current_group
+                ).aggregate(Sum('perpersoncost'))['perpersoncost__sum']
+        if tempsum:
+            usr.outstanding -= tempsum
+        usr.save()

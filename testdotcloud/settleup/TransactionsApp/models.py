@@ -47,6 +47,17 @@ class transactions(models.Model):   # {{{
 
     def __unicode__(self):
         return str(self.id)
+
+    def _get_user_paid_cost(self):
+        '''
+            this will always be positive
+        '''
+        cost = 0
+        if self.user_paid in list(self.users_involved.all()):
+            cost = self.amount - self.perpersoncost
+        else:
+            cost = self.amount
+        return cost
         #}}}
 
 

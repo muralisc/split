@@ -70,66 +70,60 @@ Transaction
 		<div class="span2">
 			{% include "navlist.html" %}
 		</div>
-		<div class="span9">
-			<div class="span1"></div>
-			<div class="span8">
-				{% ifnotequal  noOfNewNoti 0 %}
-				<a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
-				{% endifnotequal %}
-				{% ifnotequal  noOfNewPosts 0 %}
-				<a href="/displayPosts/all/"> {{ noOfNewPosts }} new Posts for you</a>
-				{% endifnotequal %}
-				<form action="" method="post" class="well">
-				   {% csrf_token %}
-					<table class="table ">
-						<tr>
-							<td>{{form.description}}{{form.description.errors}}</td>
-							<td>{{form.amount}}{{form.amount.errors}}</td>
-						</tr>
-						<tr>
-							<td>{{form.user_paid.label}}</td>
-							<td>{{form.user_paid}}{{form.user_paid.errors}}</td>
-						</tr>
-						<tr>
-							<td>{{form.users_involved.label_tag}}</td>
-							<td>{{form.users_involved}}{{form.users_involved.errors}}</td>
-						</tr>
-					</table>
-					<input  class="btn" type="Submit" value = "Submit"/>
-				</form>
-			</div>
+		<div class="span7">
+			{% ifnotequal  noOfNewNoti 0 %}
+			<a href="/notifications/all/"> {{ noOfNewNoti }} new transaction activity involving you</a></br>
+			{% endifnotequal %}
+			{% ifnotequal  noOfNewPosts 0 %}
+			<a href="/displayPosts/all/"> {{ noOfNewPosts }} new Posts for you</a>
+			{% endifnotequal %}
+			<form action="" method="post" class="well">
+			   {% csrf_token %}
+				<table class="table ">
+					<tr>
+						<td>{{form.description}}{{form.description.errors}}</td>
+						<td>{{form.amount}}{{form.amount.errors}}</td>
+					</tr>
+					<tr>
+						<td>{{form.user_paid.label}}</td>
+						<td>{{form.user_paid}}{{form.user_paid.errors}}</td>
+					</tr>
+					<tr>
+						<td>{{form.users_involved.label_tag}}</td>
+						<td>{{form.users_involved}}{{form.users_involved.errors}}</td>
+					</tr>
+				</table>
+				<input  class="btn" type="Submit" value = "Submit"/>
+			</form>
 		</div>
-	</div>
-	<div class="row-fluid" id="table">
-		<div class="span2">
-		</div>
-		<div class="span8">
-			<table id="mytable">
-				<thead>
-                <tr>
-                    <th>id</th>
-                    <th>description</th>
-                    <th>amount</th>
-                    <th>user_paid</th>
-                    <th>users_involved</th>
-                    <th>timestamp</th>
-                    <th>perpersoncost</th>
-                </tr>
-				</thead>
-				{% for row in txnstable %}
-				<tr>
-					<td>{{ forloop.revcounter }}</td>
-					<td>{{ row.description }}</td>
-					<td>{{ row.amount }}</td>
-					<td>{{ row.user_paid }}</td>
-					<td>{% for usr in row.users_involved.all %}{{ usr.name }},{% endfor %}</td>
-					<td>{{ row.timestamp  }}</td>
-					<td>{{ row.perpersoncost }}</td>
-				</tr>
-				{% endfor%}
-			</table>
-			<b><u>Integrity check</u></b><br/>
-			Sum of all outstanding [should be zero]= {{sumOfAllOutstanding}}
+		<div class="span3 well">
+			<ul class="nav nav-list">
+				<table id="side_table" class="table table-condensed">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>In pool</th>
+						</tr>
+					</thead>
+					{% for rows,change in outstanding_userstable  %}
+						<tr>
+							<td><i>{{rows.username}}{{ changeDict.ropo }}</i></td>
+							<td>{{rows.outstanding|floatformat}}
+								{% if change != 0 %}
+								(	
+									{% if change >= 0 %}
+									<i class="icon-chevron-up"></i>
+									{% else %}
+									<i class="icon-chevron-down"></i>
+									{% endif %}
+									{{ change|floatformat }}
+								)
+								{% endif %}
+							</td>
+						</tr>
+					{%endfor%}
+				</table>
+			</ul>
 		</div>
 	</div>
 </div>

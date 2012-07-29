@@ -16,9 +16,7 @@ import datetime
 from json import JSONEncoder
 import itertools
 
-# samoperson in multiple groups TODO
 # use celery for maximum asyncing TODO optimise the transaction detail function
-# update outstanding of each user wile switching group TODO
 
 def login(request):  # {{{
     try:
@@ -451,9 +449,16 @@ def transaction_create_display(request, kind):
             transactionsObj = form.save()
             # perpersoncost field
             transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
+            transactionsObj.group = users.objects.get(pk=request.session['sUserId']).group
             transactionsObj.save()
             # outdtanding field
             involvedList = list(transactionsObj.users_involved.all())
+            changeDict = dict()
+            # populate the change dict with default values
+            for usr in involvedList:
+                changeDict[usr.name] = usr.outstanding
+            changeDict[transactionsObj.user_paid.name] = transactionsObj.user_paid.outstanding
+            request.session['changeDict'] = changeDict
             if transactionsObj.user_paid in involvedList:
                 for anyUsr in involvedList:
                     if anyUsr != transactionsObj.user_paid:
@@ -515,7 +520,20 @@ def transaction_create_display(request, kind):
                 loggedInUser.lastPost = PostsTable.objects.latest('id')
                 loggedInUser.save()
             noOfNewPosts = 0
-    txnstable = transactions.objects.filter(deleted__exact=False, group=loggedInUser.group).order_by('-timestamp')
+    outstanding_userstable = users.objects.filter(
+                                            deleted__exact=False,
+                                            name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()],
+                                            ).order_by('-outstanding')
+    changeList = list()
+    if 'changeDict' in request.session:
+        changeDict = request.session['changeDict']
+        for usr in outstanding_userstable:
+            changeDict[usr.name] -= usr.outstanding
+            changeList.append(changeDict[usr.name])
+        del request.session['changeDict']
+    else:
+        changeList = [0]*outstanding_userstable.count()
+    outstanding_userstable = zip(outstanding_userstable, changeList)
     return render_to_response('transactions.html', locals(), context_instance=RequestContext(request))
 
 

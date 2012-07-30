@@ -21,13 +21,37 @@ Admin Page
                 caption     : 'Txn Database',
                 whiteSpace  : 'normal',
                 colratio    : [50, 100, 70, 100, 250, 150, 100, 120, 120, 120],
-				height      : 400,
+				height      : 500,
                 width       : 1200,
                 zebra       : true,
                 resizeCol   : true,
 				addTitles	: true,
                 sortable    : true, 
                 sortType    : ['integer', 'string', 'string', 'string', 'string','integer', 'string', 'date','integer','integer', 'string', 'string', 'string'],
+				});
+            $('#postdb').fixheadertable({
+                caption     : 'POST Database',
+                whiteSpace  : 'normal',
+                colratio    : [50],
+				height      : 200,
+                width       : 1200,
+                zebra       : true,
+                resizeCol   : true,
+				addTitles	: true,
+                sortable    : true, 
+                sortType    : ['integer'],
+				});
+            $('#groupdb').fixheadertable({
+                caption     : 'Group Database',
+                whiteSpace  : 'normal',
+                colratio    : [50],
+				height      : 200,
+                width       : 1200,
+                zebra       : true,
+                resizeCol   : true,
+				addTitles	: true,
+                sortable    : true, 
+                sortType    : ['integer'],
 				});
             });
 </script>
@@ -118,7 +142,7 @@ Admin Page
         </table>
         <!-- }}}-->
         <!-- {{{ posts display -->
-        <table class="table table-condensed table-bordered">
+        <table id="postdb" class="table table-condensed table-bordered">
             Posts Database
             <thead>
                 <tr>
@@ -149,7 +173,7 @@ Admin Page
         </table>
         <!-- }}}-->
         <!-- {{{ GroupsTable display -->
-        <table class="table table-condensed table-bordered">
+        <table id="groupdb" class="table table-condensed table-bordered">
             Groups Database
             <thead>
                 <tr>

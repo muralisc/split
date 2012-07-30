@@ -43,7 +43,6 @@ Display {{ displayType }}
                     {{ row.desc }}:
                     <b>{{ row.linkToTransaction.amount }}</b> paid by 
                     {{ row.linkToTransaction.user_paid|upper }} for
-                    {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
                     <b>{{ row.linkToTransaction.description }}</b>
                 </td>
                 <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
@@ -60,7 +59,7 @@ Display {{ displayType }}
                     {{ row.desc }}:
                     <b>{{ row.linkToTransaction.amount }}</b> paid by 
                     {{ row.linkToTransaction.user_paid|upper }} for
-                    {% for ui_rows in row.linkToTransaction.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
+                    <b>{{ row.linkToTransaction.description }}</b>
                 </td>
                 <td>{{ row.timestamp|date:"fa j/N/Y " }}</td>
             </tr>

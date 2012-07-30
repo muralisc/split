@@ -18,6 +18,7 @@ import itertools
 
 # use celery for maximum asyncing TODO optimise the transaction detail function
 # make admin page good
+# make invite option
 
 def login(request):  # {{{
     try:
@@ -242,7 +243,7 @@ def display_posts(request, *args):    # {{{
     except PostsTable.DoesNotExist:
         pass
     loggedInUser.save()
-    displayType = 'notifications'
+    displayType = 'posts'
     userFullName = users.objects.get(pk=request.session['sUserId']).name
     return render_to_response('display.html', locals(), context_instance=RequestContext(request))
     # }}}

@@ -1,0 +1,14 @@
+{% extends "personalTemplates/pabase.html" %}
+{% block cur_title  %}
+Select From Category
+{% endblock %}
+{% block current_head %}
+{% endblock %}
+{% block content %}
+<form action="/personalApp/amount/" method="POST">
+	{% csrf_token %} 
+	<div class="input-append">
+		<input class="span8" type="text" placeholder="Time"/><button class="btn btn-success" type="submit">Go!</button><button class="btn" type="submit">Thats it!</button>
+	</div>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "personalTemplates/pabase.html" %}
+{% block cur_title  %}
+Select From Category
+{% endblock %}
+{% block current_head %}
+{% endblock %}
+{% block content %}
+<form action="/personalApp/toCategory/" method="POST">
+	{% csrf_token %} 
+	<div class="input-append">
+		<input class="span10" type="text" placeholder="From Category"/><button class="btn btn-success" type="submit">Go!</button>
+	</div>
+</form>
+{% endblock %}
+

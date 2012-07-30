@@ -35,7 +35,7 @@ $(document).ready(function () {
 				<dd>{% for i in loggedInUser.group.adimns.all %}{{i}}<br/>{% endfor %}</dd>
 			<dt>Members</dt>
 				<dd>{% for i in loggedInUser.group.members.all %}{%if i not in loggedInUser.group.adimns.all %}{{i}}<br/>{% endif %}{% endfor %}</dd>
-			<dt>Invite Members</dt>
+			<dt>Add Members</dt>
 				<dd>
 					<form class="form" action="" method="post">
 						{% csrf_token %}    

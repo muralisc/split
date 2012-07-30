@@ -18,6 +18,7 @@ import itertools
 
 # use celery for maximum asyncing TODO optimise the transaction detail function
 # make admin page good
+# make invitation page TODO
 
 def login(request):  # {{{
     try:
@@ -92,8 +93,10 @@ def create_group(request):
             currentObject.adimns.add(loggedInUser)
             loggedInUser.group = currentObject
             loggedInUser.save()
-            return redirect('/groupHome/' + currentObject.name)
             createPrompt = "Group created"
+            return redirect('/groupHome/' + currentObject.name)
+        else:
+            createPrompt = "Group is not created. check if all fields were entered"
     form = GroupForm(None)
     return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
 

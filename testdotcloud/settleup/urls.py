@@ -37,4 +37,5 @@ urlpatterns = patterns('',
     (r'^personalApp/amount/$', 'settleup.personalApp.views.amount_view'),
     (r'^personalApp/description/$', 'settleup.personalApp.views.description_view'),
     (r'^personalApp/time/$', 'settleup.personalApp.views.time_view'),
+    (r'^personalApp/summary/$', 'settleup.personalApp.views.summary'),
 )

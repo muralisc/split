@@ -29,6 +29,18 @@ Admin Page
                 sortable    : true, 
                 sortType    : ['integer', 'string', 'string', 'string', 'string','integer', 'string', 'date','integer','integer', 'string', 'string', 'string'],
 				});
+            $('#postdb').fixheadertable({
+                caption     : 'Post Database',
+                whiteSpace  : 'normal',
+                colratio    : [50, 100, 70, 100, 250, 150, 100, 120, 120, 120],
+				height      : 400,
+                width       : 1200,
+                zebra       : true,
+                resizeCol   : true,
+				addTitles	: true,
+                sortable    : true, 
+                sortType    : ['integer', 'string', 'string', 'string', 'string','integer', 'string', 'date','integer','integer', 'string', 'string', 'string'],
+				});
             });
 </script>
 <!-- http://www.tablefixedheader.com/fullpagedemo/ -->
@@ -118,7 +130,7 @@ Admin Page
         </table>
         <!-- }}}-->
         <!-- {{{ posts display -->
-        <table class="table table-condensed table-bordered">
+        <table id="postdb" class="table table-condensed table-bordered">
             Posts Database
             <thead>
                 <tr>
@@ -169,6 +181,29 @@ Admin Page
                 <td>{% for usr in row.members.all %}{{ usr.name }},{% endfor %}</td>
                 <td>{% for usr in row.adimns.all %}{{ usr.name }},{% endfor %}</td>
                 <td>{{ row.deleted }}</td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
+        <!-- {{{ sessionsTable display -->
+        <table class="table table-condensed table-bordered">
+            sessions Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>key</th>
+                    <!--                    <th>data</th> -->
+                    <th>exp-date</th>
+                    <th>deleted</th>
+                </tr>
+            </thead>
+            {% for row in sessionsTable %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.session_key }}</td>
+                <!-- <td>{{ row.session_data }}</td> -->
+                <td>{{ row.expire_date }}</td>
+                <td><a href="/admin/sessionDel/{{ row.id }}/">edit</a></td>
             </tr>
             {% endfor%}
         </table>

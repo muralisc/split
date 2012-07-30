@@ -19,6 +19,8 @@ import itertools
 # use celery for maximum asyncing TODO optimise the transaction detail function
 # make admin page good
 # make invitation page TODO
+# fix bug new user invite bug TODO
+
 
 def login(request):  # {{{
     try:
@@ -461,7 +463,7 @@ def transaction_create_display(request, kind):
             involvedList = list(transactionsObj.users_involved.all())
             changeDict = dict()
             # populate the change dict with default values
-            for usr in involvedList:
+            for usr in transactionsObj.group.members.all():
                 changeDict[usr.name] = usr.outstanding
             changeDict[transactionsObj.user_paid.name] = transactionsObj.user_paid.outstanding
             request.session['changeDict'] = changeDict
@@ -674,6 +676,8 @@ def user_password_change(request):                    # {{{
                                          #}}}
 
 # HELPER functions--------------------------------------------------------------
+
+
 def update_outstanding(current_group):
     for usr in current_group.members.all():
         #for all the transaction in which 'usr' paid

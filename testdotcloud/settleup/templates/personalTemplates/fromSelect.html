@@ -5,11 +5,12 @@ Select From Category
 {% block current_head %}
 {% endblock %}
 {% block content %}
-<form action="/personalApp/toCategory/" method="POST">
+<form action="" method="POST">
 	{% csrf_token %} 
 	<div class="input-append">
-		<input class="span10" type="text" placeholder="From Category"/><button class="btn btn-success" type="submit">Go!</button>
+		{{ form.fromCategory }}<button name="nextPage" class="btn" type="submit">Go!</button>
 	</div>
+	{{ errors }}
 </form>
 {% endblock %}
 

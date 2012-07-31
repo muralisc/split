@@ -3,9 +3,10 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.db.models import Count
 from django.db.models import Q
+from chartit import DataPool, Chart
 # app imports
 from personalApp.models import Transfers
-from personalApp.forms import transferForm
+from personalApp.forms import transferForm, filterForm
 # Python imports
 import datetime
 # TODO user support for pf
@@ -239,4 +240,11 @@ def summary(request):
         currentTransfer.save()
         request.session.flush()
         return redirect('/personalApp/fromCategory/')
+    # this is stll here beacuse --> just in case
     return render_to_response('personalTemplates/summary.html', locals(), context_instance=RequestContext(request))
+
+
+def statistics(request):
+    transferList = Transfers.objects.all()
+    form = filterForm(transferList)
+    return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))

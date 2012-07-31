@@ -3,6 +3,15 @@
 Select From Category
 {% endblock %}
 {% block current_head %}
+<script type="text/javascript">
+		$(document).ready(function() {
+			$("a.options").click( function(event){
+				event.preventDefault();
+				$("input[type='text']").val($(this).html());
+				$('button[name="nextPage"]').click()
+			});
+		});
+</script>
 {% endblock %}
 {% block content %}
 <form action="" method="POST">
@@ -11,5 +20,10 @@ Select From Category
 		{{form.amount}}<button name="nextPage" class="btn" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>
 	</div>
 	{{ errors }}{{ form.amount.errors }}
+	<ul align="center" class="nav nav-list">
+		{% for i in optionList %}
+			<li><a class="options" href="#">{{ i }}</a></li>
+		{% endfor %}
+	</ul>
 </form>
 {% endblock %}

@@ -1,0 +1,31 @@
+{% extends "personalTemplates/pabase.html" %}
+{% block cur_title  %}
+Select From Category
+{% endblock %}
+{% block current_head %}
+<script type="text/javascript">
+		$(document).ready(function() {
+			$("a.options").click( function(event){
+				event.preventDefault();
+				$("input[type='text']").val($(this).html());
+			});
+		});
+</script>
+{% endblock %}
+{% block content %}
+<form align="center" action="" method="POST">
+	{% csrf_token %} 
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory }}</b>
+	<!-- -->
+	<div class="input-append">
+		{{form.amount}}<button name="nextPage" class="btn" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>
+	</div>
+	{{ errors }}{{ form.amount.errors }}
+	<ul align="center" class="nav nav-list">
+		{% for i in optionList %}
+			<li><a class="options" href="#">{{ i }}</a></li>
+		{% endfor %}
+	</ul>
+</form>
+{% endblock %}

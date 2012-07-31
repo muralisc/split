@@ -19,6 +19,7 @@ import itertools
 # use celery for maximum asyncing TODO optimise the transaction detail function
 # make admin page good
 # make invite option
+# fix bug new user invite bug TODO
 
 def login(request):  # {{{
     try:
@@ -93,8 +94,10 @@ def create_group(request):
             currentObject.adimns.add(loggedInUser)
             loggedInUser.group = currentObject
             loggedInUser.save()
-            return redirect('/groupHome/' + currentObject.name)
             createPrompt = "Group created"
+            return redirect('/groupHome/' + currentObject.name)
+        else:
+            createPrompt = "Group is not created. check if all fields were entered"
     form = GroupForm(None)
     return render_to_response('createGroup.html', locals(), context_instance=RequestContext(request))
 
@@ -459,7 +462,7 @@ def transaction_create_display(request, kind):
             involvedList = list(transactionsObj.users_involved.all())
             changeDict = dict()
             # populate the change dict with default values
-            for usr in involvedList:
+            for usr in transactionsObj.group.members.all():
                 changeDict[usr.name] = usr.outstanding
             changeDict[transactionsObj.user_paid.name] = transactionsObj.user_paid.outstanding
             request.session['changeDict'] = changeDict
@@ -672,6 +675,8 @@ def user_password_change(request):                    # {{{
                                          #}}}
 
 # HELPER functions--------------------------------------------------------------
+
+
 def update_outstanding(current_group):
     for usr in current_group.members.all():
         #for all the transaction in which 'usr' paid

@@ -1,0 +1,20 @@
+{% extends "personalTemplates/pabase.html" %}
+{% block cur_title  %}
+summary
+{% endblock %}
+{% block current_head %}
+{% endblock %}
+{% block content %}
+<form align="center" action="" method="POST">
+	{% csrf_token %}
+	<!--
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory }}</b>
+	<h4>{{ currentTransfer.amount }}</h4>
+	<h5>{{ currentTransfer.description }}</h5>
+	<h6>{{ currentTransfer.timestamp }}</h6>
+	-->
+	<button class="btn btn-warning" type="submit">Thats it!</button>
+	{{ errors }}
+</form>
+{% endblock %}

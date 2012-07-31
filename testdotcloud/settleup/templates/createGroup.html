@@ -11,6 +11,7 @@ New User
     <div class="span3">
         <form class="well" action="" method="post">
             {% csrf_token %}
+            {{ createPrompt }}
             <table>
                 {{ form.as_table }}
             </table>

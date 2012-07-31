@@ -1,6 +1,7 @@
 # Django imports
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
+from django.contrib.sessions.models import Session
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, PostsTable, GroupsTable
 from adminApp.forms import EditUserForm
@@ -17,6 +18,7 @@ def admin_view(request):
     transactionsTable = transactions.objects.all()
     postsTable = PostsTable.objects.order_by('PostType')
     groupsTable = GroupsTable.objects.all()
+    sessionsTable = Session.objects.all()
     return render_to_response('adminDB.html', locals(), context_instance=RequestContext(request))
 
 

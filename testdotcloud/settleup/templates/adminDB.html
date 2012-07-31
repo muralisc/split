@@ -197,6 +197,29 @@ Admin Page
             {% endfor%}
         </table>
         <!-- }}}-->
+        <!-- {{{ sessionsTable display -->
+        <table class="table table-condensed table-bordered">
+            sessions Database
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>key</th>
+                    <!--                    <th>data</th> -->
+                    <th>exp-date</th>
+                    <th>deleted</th>
+                </tr>
+            </thead>
+            {% for row in sessionsTable %}
+            <tr>
+                <td>{{ row.id }}</td>
+                <td>{{ row.session_key }}</td>
+                <!-- <td>{{ row.session_data }}</td> -->
+                <td>{{ row.expire_date }}</td>
+                <td><a href="/admin/sessionDel/{{ row.id }}/">edit</a></td>
+            </tr>
+            {% endfor%}
+        </table>
+        <!-- }}}-->
     </div>
 </div>
 {% endblock %}

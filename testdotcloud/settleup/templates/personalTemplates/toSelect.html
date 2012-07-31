@@ -14,8 +14,10 @@ Select To Category
 </script>
 {% endblock %}
 {% block content %}
-<form action="" method="POST">
+<form align="center" action="" method="POST">
 	{% csrf_token %} 
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<!-- -->
 	<div class="input-append">
 		{{form.toCategory}}<button name="nextPage" class="btn" type="submit">Go!</button>
 	</div>

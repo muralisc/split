@@ -14,7 +14,7 @@ Select From Category
 </script>
 {% endblock %}
 {% block content %}
-<form action="" method="POST">
+<form align="center" action="" method="POST">
 	{% csrf_token %} 
 	<div class="input-append">
 		{{ form.fromCategory }}<input name="nextPage" class="btn" type="Submit" value = "Go!"/>

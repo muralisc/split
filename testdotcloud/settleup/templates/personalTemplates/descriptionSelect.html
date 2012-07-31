@@ -3,10 +3,22 @@
 Select From Category
 {% endblock %}
 {% block current_head %}
+<script type="text/javascript">
+		$(document).ready(function() {
+			$("a.options").click( function(event){
+				event.preventDefault();
+				$("input[type='text']").val($(this).html());
+			});
+		});
+</script>
 {% endblock %}
 {% block content %}
-<form action="" method="POST">
+<form action="center" method="POST">
 	{% csrf_token %} 
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory }}</b>
+	<h4>{{ currentTransfer.amount }}</h4>
+	<!-- -->
 	<div class="input-append">
 		{{form.description}}<button name="nextPage" class="btn" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>
 	</div>

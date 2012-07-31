@@ -5,10 +5,15 @@ Select From Category
 {% block current_head %}
 {% endblock %}
 {% block content %}
-<form action="" method="POST">
+<form action="center" method="POST">
 	{% csrf_token %} 
-	<div class="input-append">
-		{{form.timestamp}}<button name="nextPage" class="btn btn-success" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory }}</b>
+	<h4>{{ currentTransfer.amount }}</h4>
+	<h5>{{ currentTransfer.description }}</h5>
+	<!-- -->
+	S<div class="input-append">
+		{{form.timestamp}}<button name="finish" class="btn btn-success" type="submit">Thats it!</button>
 	</div>
 	{{ errors }}{{ form.timestamp.errors }}
 </form>

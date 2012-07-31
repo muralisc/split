@@ -8,14 +8,16 @@ Select From Category
 			$("a.options").click( function(event){
 				event.preventDefault();
 				$("input[type='text']").val($(this).html());
-				$('button[name="nextPage"]').click()
 			});
 		});
 </script>
 {% endblock %}
 {% block content %}
-<form action="" method="POST">
+<form align="center" action="" method="POST">
 	{% csrf_token %} 
+	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory }}</b>
+	<!-- -->
 	<div class="input-append">
 		{{form.amount}}<button name="nextPage" class="btn" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>
 	</div>

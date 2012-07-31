@@ -41,11 +41,11 @@ def from_category_view(request):
                                     ).order_by(
                                     '-no_of_occ'
                                     )
-    optionList = list()
-    for i in fromDistinct:
-        optionList.append(i['fromCategory'])
-    for i in toDistinct:
-        optionList.append(i['toCategory'])
+        optionList = list()
+        for i in fromDistinct:
+            optionList.append(i['fromCategory'])
+        for i in toDistinct:
+            optionList.append(i['toCategory'])
     return render_to_response('personalTemplates/fromSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -96,13 +96,13 @@ def to_category_view(request):
                                                 ).order_by(
                                                 '-no_of_occ'
                                                 )
-    optionList = list()
-    for i in possibleToDistinct:
-        optionList.append(i['toCategory'])
-    for i in toDistinct:
-        optionList.append(i['toCategory'])
-    for i in fromDistinct:
-        optionList.append(i['fromCategory'])
+        optionList = list()
+        for i in possibleToDistinct:
+            optionList.append(i['toCategory'])
+        for i in toDistinct:
+            optionList.append(i['toCategory'])
+        for i in fromDistinct:
+            optionList.append(i['fromCategory'])
     return render_to_response('personalTemplates/toSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -128,6 +128,7 @@ def amount_view(request):
                         return redirect('/personalApp/description/')
                 else:
                     errors = "enter some money"
+                    currentTransfer = request.session['currentTransfer']
         else:
             currentTransfer = request.session['currentTransfer']
             possibleAmountDistinct = Transfers.objects.filter(
@@ -140,9 +141,9 @@ def amount_view(request):
                                                 ).order_by(
                                                 '-no_of_occ'
                                                 )
-    optionList = list()
-    for i in possibleAmountDistinct:
-        optionList.append(i['amount'])
+            optionList = list()
+            for i in possibleAmountDistinct:
+                optionList.append(i['amount'])
     return render_to_response('personalTemplates/amountSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -172,6 +173,33 @@ def description_view(request):
                     return redirect('/personalApp/summary/')
                 else:
                     errors = "enter some description"
+        else:
+            currentTransfer = request.session['currentTransfer']
+            possibleDescDistinct = Transfers.objects.filter(
+                                                Q(fromCategory=currentTransfer.fromCategory),
+                                                Q(toCategory=currentTransfer.toCategory)
+                                                ).values(
+                                                'description'
+                                                ).annotate(
+                                                no_of_occ=Count('description')
+                                                ).order_by(
+                                                '-no_of_occ'
+                                                )
+            descDistinct = Transfers.objects.filter(
+                                                #exclude alredy selected Category values
+                                                ~Q(description__in=[i['description'] for i in possibleDescDistinct])
+                                                ).values(
+                                                'description'
+                                                ).annotate(
+                                                no_of_occ=Count('description')
+                                                ).order_by(
+                                                '-no_of_occ'
+                                                )
+            optionList = list()
+            for i in possibleDescDistinct:
+                optionList.append(i['description'])
+            for i in descDistinct:
+                optionList.append(i['description'])
     return render_to_response('personalTemplates/descriptionSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -207,8 +235,8 @@ def summary(request):
         return redirect('/personalApp/fromCategory/')
     else:
         currentTransfer = request.session['currentTransfer']
-        if request.method == "POST":
-            currentTransfer.save()
-            request.session.flush()
-            return redirect('/personalApp/fromCategory/')
+        # if request.method == "POST":
+        currentTransfer.save()
+        request.session.flush()
+        return redirect('/personalApp/fromCategory/')
     return render_to_response('personalTemplates/summary.html', locals(), context_instance=RequestContext(request))

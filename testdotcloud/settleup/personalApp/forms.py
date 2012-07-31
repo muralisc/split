@@ -12,5 +12,5 @@ class transferForm(forms.ModelForm):   # {{{
                 'toCategory': forms.TextInput(attrs={'class': 'span10', 'placeholder': 'To Category'}),
                 'amount': forms.TextInput(attrs={'class': 'span8', 'placeholder': 'amount'}),
                 'description': forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Any xtra desc'}),
-                'timestamp': forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Time'}),
+                'timestamp': forms.TextInput(attrs={'class': 'span9', 'placeholder': 'Time'}),
                 }

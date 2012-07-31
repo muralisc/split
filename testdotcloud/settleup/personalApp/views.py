@@ -247,4 +247,5 @@ def summary(request):
 def statistics(request):
     transferList = Transfers.objects.all()
     form = filterForm(transferList)
+    import pdb; pdb.set_trace() ### XXX BREAKPOINT
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))

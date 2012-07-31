@@ -54,7 +54,7 @@ $(document).ready(function() {
 			<td>{{ form.toCategory }}</td>
 			<td>{{ form.amount }}</td>
 			<td>{{ form.description }}</td>
-			<td>{{ form.timeStart }}{{ form.timeEnd }}</td>
+			<td>{{ form.timeStart }}{{ form.timeEnd }}{{ form.timeSortType }}</td>
 			<td>deleted</td>
 			<td>edit</td>
 			<td>delete</td>
@@ -74,5 +74,5 @@ $(document).ready(function() {
 	</tr>
 	{% endfor%}
 </table>
-<div id='container'> Chart will be rendered here </div>
+<div id='container' class="span3"> Chart will be rendered here </div>
 {% endblock %}

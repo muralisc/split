@@ -13,7 +13,7 @@ Select From Category
 </script>
 {% endblock %}
 {% block content %}
-<form action="center" method="POST">
+<form action="" align="center" method="POST">
 	{% csrf_token %} 
 	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
 	<b>{{ currentTransfer.toCategory }}</b>

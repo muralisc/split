@@ -25,6 +25,7 @@ class filterForm(forms.Form):
     description = forms.ChoiceField(widget=forms.Select(attrs={'class': 'span12'}), required=False)
     timeStart = forms.DateField(widget=forms.TextInput(attrs={'class': 'span12', 'placeholder': 'Start (%m %d)'}), input_formats='%m %d', required=False)
     timeEnd = forms.DateField(widget=forms.TextInput(attrs={'class': 'span12', 'placeholder': 'End (%m %d)'}), input_formats='%m %d', required=False)
+    timeSortType = forms.ChoiceField(widget=forms.Select(attrs={'class': 'span12'}), required=False)
 
     def __init__(self, dbrows, *args, **kwargs):
         super(filterForm, self).__init__(*args, **kwargs)
@@ -34,3 +35,5 @@ class filterForm(forms.Form):
         self.fields['toCategory'].choices.insert(0, ('', '---------'))
         self.fields['description'].choices = ((x['description'], x['description']) for x in dbrows.values('description').distinct())
         self.fields['description'].choices.insert(0, ('', '---------'))
+        self.fields['timeSortType'].choices = (('Month', 'Month'), ('Week', 'Week'), ('Day', 'Day'))
+        self.fields['timeSortType'].choices.insert(0, ('', '---------'))

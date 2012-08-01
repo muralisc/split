@@ -19,13 +19,13 @@ class transferForm(forms.ModelForm):   # {{{
 
 
 class filterForm(forms.Form):
-    fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'span12'}), empty_value="------", required=False)
-    toCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'span12'}), required=False)
-    amount = forms.CharField(widget=forms.TextInput(attrs={'class': 'span12'}), required=False)
-    description = forms.ChoiceField(widget=forms.Select(attrs={'class': 'span12'}), required=False)
-    timeStart = forms.DateField(widget=forms.TextInput(attrs={'class': 'span12', 'placeholder': 'Start (%m %d)'}), input_formats='%m %d', required=False)
-    timeEnd = forms.DateField(widget=forms.TextInput(attrs={'class': 'span12', 'placeholder': 'End (%m %d)'}), input_formats='%m %d', required=False)
-    timeSortType = forms.ChoiceField(widget=forms.Select(attrs={'class': 'span12'}), required=False)
+    fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), empty_value="------", required=False)
+    toCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
+    amount = forms.CharField(widget=forms.TextInput(attrs={'class': 'filters span12'}), required=False)
+    description = forms.ChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
+    timeStart = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'Start (%m %d)'}), input_formats='%m %d', required=False)
+    timeEnd = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'End (%m %d)'}), input_formats='%m %d', required=False)
+    timeSortType = forms.ChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
 
     def __init__(self, dbrows, *args, **kwargs):
         super(filterForm, self).__init__(*args, **kwargs)

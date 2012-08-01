@@ -8,6 +8,7 @@ from personalApp.models import Transfers
 from personalApp.forms import transferForm, filterForm
 # Python imports
 import datetime
+import itertools
 # TODO user support for pf
 
 
@@ -244,25 +245,33 @@ def summary(request):
 
 
 def statistics(request):
-    allRowsForForm = Transfers.objects.all()
     transferFilters = Q()
     if request.method == "POST":
         # form = filterForm(transferList, request.POST)
         if 'delete' in request.POST:
             xferIdToDelete = request.POST['delete']
             Transfers.objects.get(pk=xferIdToDelete).delete()
+        # filter the data based in the filters
         if request.POST['fromCategory'] != '':
             transferFilters = transferFilters & Q(fromCategory__exact=request.POST['fromCategory'])
         if request.POST['toCategory'] != '':
             transferFilters = transferFilters & Q(toCategory__exact=request.POST['toCategory'])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
-    transferList = Transfers.objects.filter(transferFilters)
-    if request.method == "POST":
-        form = filterForm(allRowsForForm, initial={
+        transferList = Transfers.objects.filter(transferFilters)
+        # use filtered transfer list insted of this    transferList = Transfers.objects.all()
+        if request.POST['timeSortType'] == 'Day':
+            newList = list()
+            for day, gByDay in itertools.groupby(transferList, key=lambda x: x.timestamp.day):
+                sumOfAmounts = 0
+                for i in gByDay:
+                    sumOfAmounts += i.amount
+                newList.append([sumOfAmounts, i.timestamp.date().strftime("%d/%m/%y")])
+        form = filterForm(transferList, initial={
                                                 "fromCategory": request.POST['fromCategory'],
                                                 'toCategory': request.POST['toCategory']
                                                 })
     else:
-        form = filterForm(allRowsForForm)
+        transferList = Transfers.objects.filter(transferFilters)
+        form = filterForm(transferList)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))

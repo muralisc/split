@@ -7,16 +7,21 @@ summary
 <script src="{{ STATIC_URL }}highcharts/js/modules/exporting.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-      chart1 = new Highcharts.Chart({
+      {% for row in newList %}
+	  chart1 = new Highcharts.Chart({
          chart: {
             renderTo: 'container',
-            type: 'bar'
+            type: 'line'
          },
          title: {
-            text: 'Fruit Consumption'
+            text: 'daily'
          },
          xAxis: {
-            categories: ['Apples', 'Bananas', 'Oranges']
+            categories: [
+						{% for row in newList %}
+						'{{ row.1 }}',
+						{% endfor %}
+						]
          },
          yAxis: {
             title: {
@@ -24,13 +29,15 @@ $(document).ready(function() {
             }
          },
          series: [{
-            name: 'Jane',
-            data: [1, 0, 4]
-         }, {
-            name: 'John',
-            data: [5, 7, 3]
+            name: 'amount/day',
+            data: 	[
+					{% for row in newList %}
+					{{ row.0 }},
+					{% endfor %}
+					]
          }]
       });
+      {% endfor %}
       $("select.filters").change(function(){
 			$("#formID").submit();
       });
@@ -66,20 +73,35 @@ $(document).ready(function() {
 				<td>delete</td>
 			</tr>
 		</thead>
-		{% for row in transferList %}
+		{% if not newList%}
+			{% for row in transferList %}
+			<tr>
+				<td>{{ row.id }}</td>
+				<td>{{ row.fromCategory }}</td>
+				<td>{{ row.toCategory }}</td>
+				<td>{{ row.amount }}</td>
+				<td>{{ row.description }}</td>
+				<td>{{ row.timestamp  }}</td>
+				<td>{{ row.deleted }}</td>
+				<td><a href="">edit</a></td>
+				<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
+			</tr>
+			{% endfor%}
+		{% endif %}
+		{% for row in newList %}
 		<tr>
-			<td>{{ row.id }}</td>
-			<td>{{ row.fromCategory }}</td>
-			<td>{{ row.toCategory }}</td>
-			<td>{{ row.amount }}</td>
-			<td>{{ row.description }}</td>
-			<td>{{ row.timestamp  }}</td>
-			<td>{{ row.deleted }}</td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td>{{ row.0 }}</td>
+			<td></td>
+			<td>{{ row.1  }}</td>
+			<td></td>
 			<td><a href="">edit</a></td>
 			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
 		</tr>
 		{% endfor%}
 	</table>
 </form>
-<div id='container' class="span3"> Chart will be rendered here </div>
+<div id='container'> Chart will be rendered here </div>
 {% endblock %}

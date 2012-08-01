@@ -1,7 +1,7 @@
 # Django imports
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models import Q
 # app imports
 from personalApp.models import Transfers
@@ -274,4 +274,28 @@ def statistics(request):
     else:
         transferList = Transfers.objects.filter(transferFilters)
         form = filterForm(transferList)
+    # category sum
+    fromCategorySum = Transfers.objects.values(
+                                'fromCategory'
+                                ).annotate(
+                                sum_source=Sum('amount')
+                                )
+    categoryDict = dict()
+    for iDict in fromCategorySum:
+        categoryDict[iDict['fromCategory']] = iDict['sum_source']
+    toCategorySum = Transfers.objects.values(
+                                'toCategory'
+                                ).annotate(
+                                sum_dest=Sum('amount')
+                                )
+    for iDict in toCategorySum:
+        if iDict['toCategory'] in categoryDict.keys():
+            categoryDict[iDict['toCategory']] -= iDict['sum_dest']
+        else:
+            categoryDict[iDict['toCategory']] = -iDict['sum_dest']
+    categoryTotalList = list()
+    for key, value in categoryDict.iteritems():
+        categoryTotalList.append([key, value])
+    # insted of lambda fn you can use itemgetter
+    categoryTotalList = sorted(categoryTotalList, key=lambda student: student[1], reverse = True)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))

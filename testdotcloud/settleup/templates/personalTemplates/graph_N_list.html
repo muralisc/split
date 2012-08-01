@@ -45,6 +45,11 @@ $(document).ready(function() {
    });
 </script>
 {% endblock %}
+{% block content %}
+	{% for row in categoryTotalList %}
+	{{ row.0 }} <b>{{ row.1 }}</b><br/>
+	{% endfor %}
+{% endblock %}
 {% block footer %}
 <form id="formID" action="" method="post" >
 {% csrf_token %} 

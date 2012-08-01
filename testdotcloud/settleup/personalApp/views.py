@@ -3,7 +3,6 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.db.models import Count
 from django.db.models import Q
-from chartit import DataPool, Chart
 # app imports
 from personalApp.models import Transfers
 from personalApp.forms import transferForm, filterForm
@@ -245,7 +244,25 @@ def summary(request):
 
 
 def statistics(request):
-    transferList = Transfers.objects.all()
-    form = filterForm(transferList)
-    import pdb; pdb.set_trace() ### XXX BREAKPOINT
+    allRowsForForm = Transfers.objects.all()
+    transferFilters = Q()
+    if request.method == "POST":
+        # form = filterForm(transferList, request.POST)
+        if 'delete' in request.POST:
+            xferIdToDelete = request.POST['delete']
+            Transfers.objects.get(pk=xferIdToDelete).delete()
+        if request.POST['fromCategory'] != '':
+            transferFilters = transferFilters & Q(fromCategory__exact=request.POST['fromCategory'])
+        if request.POST['toCategory'] != '':
+            transferFilters = transferFilters & Q(toCategory__exact=request.POST['toCategory'])
+        if request.POST['description'] != '':
+            transferFilters = transferFilters & Q(description__exact=request.POST['description'])
+    transferList = Transfers.objects.filter(transferFilters)
+    if request.method == "POST":
+        form = filterForm(allRowsForForm, initial={
+                                                "fromCategory": request.POST['fromCategory'],
+                                                'toCategory': request.POST['toCategory']
+                                                })
+    else:
+        form = filterForm(allRowsForForm)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))

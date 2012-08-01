@@ -31,48 +31,55 @@ $(document).ready(function() {
             data: [5, 7, 3]
          }]
       });
+      $("select.filters").change(function(){
+			$("#formID").submit();
+      });
+				
    });
 </script>
 {% endblock %}
 {% block footer %}
-<table id="userdb" class="table table-condensed table-bordered">
-	<thead>
+<form id="formID" action="" method="post" >
+{% csrf_token %} 
+	<table id="userdb" class="table table-condensed table-bordered">
+		<thead>
+			<tr>
+				<th>id</th>
+				<th>From</th>
+				<th>To</th>
+				<th>amount</th>
+				<th>description</th>
+				<th>timestamp</th>
+				<th>deleted</th>
+				<th>edit</th>
+				<th>delete</th>
+			</tr>
+			<tr>
+				<td></td>
+				<td>{{ form.fromCategory }}</td>
+				<td>{{ form.toCategory }}</td>
+				<td>{{ form.amount }}</td>
+				<td>{{ form.description }}</td>
+				<td>{{ form.timeStart }}{{ form.timeEnd }}{{ form.timeSortType }}</td>
+				<td>deleted</td>
+				<td>edit</td>
+				<td>delete</td>
+			</tr>
+		</thead>
+		{% for row in transferList %}
 		<tr>
-			<th>id</th>
-			<th>From</th>
-			<th>To</th>
-			<th>amount</th>
-			<th>description</th>
-			<th>timestamp</th>
-			<th>deleted</th>
-			<th>edit</th>
-			<th>delete</th>
+			<td>{{ row.id }}</td>
+			<td>{{ row.fromCategory }}</td>
+			<td>{{ row.toCategory }}</td>
+			<td>{{ row.amount }}</td>
+			<td>{{ row.description }}</td>
+			<td>{{ row.timestamp  }}</td>
+			<td>{{ row.deleted }}</td>
+			<td><a href="">edit</a></td>
+			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
 		</tr>
-		<tr>
-			<td></td>
-			<td>{{ form.fromCategory }}</td>
-			<td>{{ form.toCategory }}</td>
-			<td>{{ form.amount }}</td>
-			<td>{{ form.description }}</td>
-			<td>{{ form.timeStart }}{{ form.timeEnd }}{{ form.timeSortType }}</td>
-			<td>deleted</td>
-			<td>edit</td>
-			<td>delete</td>
-		</tr>
-	</thead>
-	{% for row in transferList %}
-	<tr>
-		<td>{{ row.id }}</td>
-		<td>{{ row.fromCategory }}</td>
-		<td>{{ row.toCategory }}</td>
-		<td>{{ row.amount }}</td>
-		<td>{{ row.description }}</td>
-		<td>{{ row.timestamp  }}</td>
-		<td>{{ row.deleted }}</td>
-		<td><a href="">edit</a></td>
-		<td><a href="">delete</a></td>
-	</tr>
-	{% endfor%}
-</table>
+		{% endfor%}
+	</table>
+</form>
 <div id='container' class="span3"> Chart will be rendered here </div>
 {% endblock %}

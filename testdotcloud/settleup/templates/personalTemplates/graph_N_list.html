@@ -46,9 +46,17 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 {% block content %}
+<div class="span4">
+<a href="/personalApp/fromCategory/"><i class="icon-home"></i></a></div>
+<div class="span4">
+</div>
+<div class="span4" align="right">
+<a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
+
 	{% for row in categoryTotalList %}
 	{{ row.0 }} <b>{{ row.1 }}</b><br/>
 	{% endfor %}
+
 {% endblock %}
 {% block footer %}
 <form id="formID" action="" method="post" >

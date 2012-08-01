@@ -5,6 +5,12 @@ Select From Category
 {% block current_head %}
 {% endblock %}
 {% block content %}
+<div class="span4">
+<a href="/personalApp/fromCategory/"><i class="icon-home"></i></a></div>
+<div class="span4">
+</div>
+<div class="span4" align="right">
+<a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
 <form action="" align="center" method="POST">
 	{% csrf_token %} 
 	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
@@ -12,7 +18,7 @@ Select From Category
 	<h4>{{ currentTransfer.amount }}</h4>
 	<h5>{{ currentTransfer.description }}</h5>
 	<!-- -->
-	S<div class="input-append">
+	<div class="input-append">
 		{{form.timestamp}}<button name="finish" class="btn btn-success" type="submit">Thats it!</button>
 	</div>
 	{{ errors }}{{ form.timestamp.errors }}

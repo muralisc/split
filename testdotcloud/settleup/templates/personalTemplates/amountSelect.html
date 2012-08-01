@@ -13,6 +13,12 @@ Select From Category
 </script>
 {% endblock %}
 {% block content %}
+<div class="span4">
+<a href="/personalApp/fromCategory/"><i class="icon-home"></i></a></div>
+<div class="span4">
+</div>
+<div class="span4" align="right">
+<a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
 <form align="center" action="" method="POST">
 	{% csrf_token %} 
 	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>

@@ -7,7 +7,8 @@ Select From Category
 		$(document).ready(function() {
 			$("a.options").click( function(event){
 				event.preventDefault();
-				$("input[type='text']").val($(this).html());
+				var input = $("<input>").attr("type", "hidden").attr("name", "fromSelected").val($(this).attr("rel"));
+				$('#form1').append($(input));	
 				$('input[class="btn"]').click()
 			});
 		});
@@ -20,15 +21,15 @@ Select From Category
 </div>
 <div class="span4" align="right">
 <a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
-<form align="center" action="" method="POST">
+<form id="form1" align="center" action="" method="POST">
 	{% csrf_token %} 
 	<div class="input-append">
 		{{ form.fromCategory }}<input name="nextPage" class="btn" type="Submit" value = "Go!"/>
 	</div>
 	{{ errors }}
 	<ul align="center" class="nav nav-list">
-		{% for i in optionList %}
-			<li><a class="options" href="#">{{ i }}</a></li>
+		{% for i in fromDistinct %}
+			<li><a class="options" rel="{{ i.pk }}" href="#">{{ i.name }}</a></li>
 		{% endfor %}
 	</ul>
 </form>

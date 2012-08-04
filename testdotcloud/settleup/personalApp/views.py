@@ -4,8 +4,9 @@ from django.template import RequestContext
 from django.db.models import Count, Sum
 from django.db.models import Q
 # app imports
-from personalApp.models import Transfers
-from personalApp.forms import transferForm, filterForm
+from personalApp.models import Transfers, Categories
+from TransactionsApp.models import users
+from personalApp.forms import transferForm, filterForm, CreateCategory
 # Python imports
 import datetime
 import itertools
@@ -13,97 +14,65 @@ import itertools
 
 
 def from_category_view(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if request.method == "POST":
         form = transferForm(request.POST)
         if form.is_valid():
-            if form.cleaned_data['fromCategory'] != '':
+            if 'fromSelected' in request.POST:
                 currentTransfer = Transfers()
-                currentTransfer.fromCategory = form.cleaned_data['fromCategory']
+                currentTransfer.fromCategory_id = request.POST['fromSelected']
                 request.session['currentTransfer'] = currentTransfer
                 return redirect('/personalApp/toCategory/')
+            if form.cleaned_data['fromCategory'] != '':
+                request.session['newCategory'] = form.cleaned_data['fromCategory']
+                request.session['nextLink'] = '/personalApp/toCategory/'
+                return redirect('/personalApp/createCategory/')
             else:
                 errors = "enter some category"
     else:
         form = transferForm()
-        fromDistinct = Transfers.objects.values(
-                                    'fromCategory'
-                                    ).annotate(
-                                    no_of_occ=Count('fromCategory')
-                                    ).order_by(
-                                    '-no_of_occ'
+        fromDistinct = Categories.objects.filter(
+                                    userID=loggedInUser.pk,
+                                    category_type='source'
+
                                     )
-        toDistinct = Transfers.objects.filter(
-                                    #exclude alredy selected Category values
-                                    ~Q(toCategory__in=[i['fromCategory'] for i in fromDistinct])
-                                    ).values(
-                                    'toCategory'
-                                    ).annotate(
-                                    no_of_occ=Count('toCategory')
-                                    ).order_by(
-                                    '-no_of_occ'
-                                    )
-        optionList = list()
-        for i in fromDistinct:
-            optionList.append(i['fromCategory'])
-        for i in toDistinct:
-            optionList.append(i['toCategory'])
     return render_to_response('personalTemplates/fromSelect.html', locals(), context_instance=RequestContext(request))
 
 
 def to_category_view(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if 'currentTransfer' not in request.session:
         return redirect('/personalApp/fromCategory/')
     else:
-        form = transferForm()
+        import pdb; pdb.set_trace() ### XXX BREAKPOINT
         if request.method == "POST":
             form = transferForm(request.POST)
             if form.is_valid():
-                if form.cleaned_data['toCategory'] != '':
+                import pdb; pdb.set_trace() ### XXX BREAKPOINT
+                if 'toSelected' in request.POST:
                     currentTransfer = request.session['currentTransfer']
-                    currentTransfer.toCategory = form.cleaned_data['toCategory']
+                    currentTransfer.toCategory_id = request.POST['toSelected']
                     request.session['currentTransfer'] = currentTransfer
                     return redirect('/personalApp/amount/')
+                if form.cleaned_data['toCategory'] != '':
+                    request.session['newCategory'] = form.cleaned_data['toCategory']
+                    request.session['nextLink'] = '/personalApp/amount/'
+                    return redirect('/personalApp/createCategory/')
                 else:
                     errors = "enter some category"
         else:
+            form = transferForm()
             currentTransfer = request.session['currentTransfer']
-            possibleToDistinct = Transfers.objects.filter(
-                                                Q(fromCategory=currentTransfer.fromCategory)
-                                                ).values(
-                                                'toCategory'
-                                                ).annotate(
-                                                no_of_occ=Count('toCategory')
-                                                ).order_by(
-                                                '-no_of_occ'
-                                                )
-            toDistinct = Transfers.objects.filter(
-                                                #exclude alredy selected Category values
-                                                ~Q(toCategory__in=[i['toCategory'] for i in possibleToDistinct])
-                                                ).values(
-                                                'toCategory'
-                                                ).annotate(
-                                                no_of_occ=Count('toCategory')
-                                                ).order_by(
-                                                '-no_of_occ'
-                                                )
-            fromDistinct = Transfers.objects.filter(
-                                                #exclude alredy selected Category values
-                                                ~Q(fromCategory__in=[i['toCategory'] for i in possibleToDistinct]),
-                                                ~Q(fromCategory__in=[i['toCategory'] for i in toDistinct])
-                                                ).values(
-                                                'fromCategory'
-                                                ).annotate(
-                                                no_of_occ=Count('fromCategory')
-                                                ).order_by(
-                                                '-no_of_occ'
-                                                )
-        optionList = list()
-        for i in possibleToDistinct:
-            optionList.append(i['toCategory'])
-        for i in toDistinct:
-            optionList.append(i['toCategory'])
-        for i in fromDistinct:
-            optionList.append(i['fromCategory'])
+            toDistinct = Categories.objects.filter(
+                                    userID=loggedInUser.pk,
+                                    category_type='leach'
+                                    )
     return render_to_response('personalTemplates/toSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -282,7 +251,7 @@ def statistics(request):
                                 )
     categoryDict = dict()
     for iDict in fromCategorySum:
-        categoryDict[iDict['fromCategory']] = iDict['sum_source']
+        categoryDict[iDict['fromCategory']] = -iDict['sum_source']
     toCategorySum = Transfers.objects.values(
                                 'toCategory'
                                 ).annotate(
@@ -290,12 +259,24 @@ def statistics(request):
                                 )
     for iDict in toCategorySum:
         if iDict['toCategory'] in categoryDict.keys():
-            categoryDict[iDict['toCategory']] -= iDict['sum_dest']
+            categoryDict[iDict['toCategory']] += iDict['sum_dest']
         else:
-            categoryDict[iDict['toCategory']] = -iDict['sum_dest']
+            categoryDict[iDict['toCategory']] = iDict['sum_dest']
     categoryTotalList = list()
     for key, value in categoryDict.iteritems():
         categoryTotalList.append([key, value])
     # insted of lambda fn you can use itemgetter
-    categoryTotalList = sorted(categoryTotalList, key=lambda student: student[1], reverse = True)
+    categoryTotalList = sorted(categoryTotalList, key=lambda student: student[1], reverse=True)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))
+
+
+def create_category_view(request):
+    form = CreateCategory({'name': request.session['newCategory'], 'initial_amt': 0})
+    if request.method == 'POST':
+        form = CreateCategory(request.POST)
+        if form.is_valid():
+            categoryObject = form.save(commit=False)
+            categoryObject.userID = users.objects.get(pk=request.session['sUserId']).pk
+            categoryObject.save()
+            return redirect(request.session['nextLink'])
+    return render_to_response('personalTemplates/createCategory.html', locals(), context_instance=RequestContext(request))

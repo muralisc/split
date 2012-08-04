@@ -2,20 +2,15 @@
 from django import forms
 from django.db.models import Count
 from django.db.models import Q
-from personalApp.models import Transfers
+from personalApp.models import Transfers, Categories
 
 
-class transferForm(forms.ModelForm):   # {{{
-    class Meta:
-        model = Transfers
-
-        widgets = {
-                'fromCategory': forms.TextInput(attrs={'class': 'span10', 'placeholder': 'From Category'}),
-                'toCategory': forms.TextInput(attrs={'class': 'span10', 'placeholder': 'To Category'}),
-                'amount': forms.TextInput(attrs={'class': 'span8', 'placeholder': 'amount'}),
-                'description': forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Any xtra desc'}),
-                'timestamp': forms.TextInput(attrs={'class': 'span9', 'placeholder': 'Time'}),
-                }
+class transferForm(forms.Form):   # {{{
+    fromCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'From Category'}), required=False)
+    toCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'To Category'}), required=False)
+    amount = forms.FloatField(widget=forms.TextInput(attrs={'class': 'span8', 'placeholder': 'amount'}), required=False)
+    description = forms.CharField(widget=forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Any xtra desc'}), required=False)
+    timestamp = forms.DateTimeField(widget=forms.TextInput(attrs={'class': 'span9', 'placeholder': 'Time'}), required=False)
 
 
 class filterForm(forms.Form):
@@ -37,3 +32,13 @@ class filterForm(forms.Form):
         self.fields['description'].choices.insert(0, ('', '---------'))
         self.fields['timeSortType'].choices = (('Month', 'Month'), ('Week', 'Week'), ('Day', 'Day'))
         self.fields['timeSortType'].choices.insert(0, ('', '---------'))
+
+
+class CreateCategory(forms.ModelForm):
+    name = forms.CharField(widget=forms.TextInput(attrs={'class': 'span12'}))
+    category_type = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'span12'}), choices=(('source', 'source'), ('leach', 'leach')))
+    initial_amt = forms.FloatField(widget=forms.TextInput(attrs={'class': 'span12'}))
+
+    class Meta:
+        model = Categories
+        fields = ('name', 'category_type', 'initial_amt')

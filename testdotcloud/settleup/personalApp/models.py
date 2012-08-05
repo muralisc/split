@@ -16,3 +16,6 @@ class Transfers(models.Model):
     timestamp = models.DateTimeField(blank=True)
     deleted = models.BooleanField(default=False, blank=True)
     userID = models.IntegerField(blank=True, null=True)
+
+    def __unicode__(self):
+        return str(self.id)

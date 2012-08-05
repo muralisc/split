@@ -68,6 +68,7 @@ $(document).ready(function() {
 {% block footer %}
 total over time<br/>
 each category over time
+<div id='container'> Chart will be rendered here </div>
 <form id="formID" action="" method="post" >
 {% csrf_token %} 
 	<table id="userdb" class="table table-condensed table-bordered">
@@ -95,7 +96,7 @@ each category over time
 				<td>delete</td>
 			</tr>
 		</thead>
-		{% if not newList%}
+		{% if newList == None and cwsToList == None%}
 			{% for row in transferList %}
 			<tr>
 				<td>{{ row.id }}</td>
@@ -123,7 +124,19 @@ each category over time
 			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
 		</tr>
 		{% endfor%}
+		{% for row in cwsToList %}
+		<tr>
+			<td></td>
+			<td></td>
+			<td>{{ row.0 }}</td>
+			<td>{{ row.1  }}</td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><a href="">edit</a></td>
+			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
+		</tr>
+		{% endfor%}
 	</table>
 </form>
-<div id='container'> Chart will be rendered here </div>
 {% endblock %}

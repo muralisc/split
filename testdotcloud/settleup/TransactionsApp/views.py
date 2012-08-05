@@ -15,6 +15,7 @@ import csv
 import re
 import random
 import datetime
+import decimal
 from json import JSONEncoder
 import itertools
 
@@ -22,6 +23,7 @@ import itertools
 # make admin page good
 # make invite option
 # fix bug new user invite bug TODO
+
 
 def login(request):  # {{{
     try:
@@ -465,7 +467,7 @@ def transaction_create_display(request, kind):
                 currentTransfer = Transfers()
                 currentTransfer.fromCategory_id = request.POST['fromForTransactions']
                 currentTransfer.toCategory_id = Categories.objects.filter(userID=request.session['sUserId']).get(name='split').id
-                currentTransfer.amount = form.cleaned_data['amount']
+                currentTransfer.amount = decimal.Decimal(form.cleaned_data['amount'])
                 currentTransfer.description = form.cleaned_data['description']
                 currentTransfer.timestamp = datetime.datetime.now()
                 currentTransfer.userID = users.objects.get(pk=request.session['sUserId']).pk
@@ -512,6 +514,7 @@ def transaction_create_display(request, kind):
     else:
         # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
+        update_outstanding(loggedInUser.group)
         form = transactionsForm(loggedInUser)
         # check if user users personal aPP
         if {'userID': loggedInUser.pk} in Categories.objects.values('userID').distinct():
@@ -651,6 +654,8 @@ def transaction_detail(request, kind):
                     t.append(i[5 + userpos + usercount])
                     newtable.append(t)
         newtable.reverse()
+        if loggedInUser.username == 'admin':
+            request.session['newtable'] = newtable
     ### END OF if txnstable:
     # integrity checks
     sumOfAllOutstanding = 0
@@ -704,11 +709,12 @@ def user_password_change(request):                    # {{{
 def update_outstanding(current_group):
     for usr in current_group.members.all():
         #for all the transaction in which 'usr' paid
-        tempTxns = usr.transactions_set.filter(group=current_group)
+        tempTxns = usr.transactions_set.filter(group=current_group, deleted=False)
         usr.outstanding = sum([i._get_user_paid_cost() for i in tempTxns])
         #for all the transaction in which 'usr' was jsut a member
         tempsum = usr.transactions_set1.filter(~Q(pk__in=[i.pk for i in tempTxns]),
-                group=current_group
+                group=current_group,
+                deleted=False
                 ).aggregate(Sum('perpersoncost'))['perpersoncost__sum']
         if tempsum:
             usr.outstanding -= tempsum

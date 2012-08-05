@@ -230,7 +230,7 @@ def statistics(request):
         return redirect('/')
     else:
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    transferFilters = Q()
+    transferFilters = Q(userID=loggedInUser.pk)
     if request.method == "POST":
         # form = filterForm(transferList, request.POST)
         if 'delete' in request.POST:
@@ -239,7 +239,7 @@ def statistics(request):
         # filter the data based in the filters
         if request.POST['fromCategory'] != '':
             transferFilters = transferFilters & Q(fromCategory_id=request.POST['fromCategory'])
-        if request.POST['toCategory'] != '':
+        if request.POST['toCategory'] != '' and request.POST['toCategory'] != 'CWS':
             transferFilters = transferFilters & Q(toCategory_id=request.POST['toCategory'])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
@@ -252,12 +252,17 @@ def statistics(request):
                 for i in gByDay:
                     sumOfAmounts += i.amount
                 newList.append([sumOfAmounts, i.timestamp.date().strftime("%d/%m/%y")])
+        if request.POST['toCategory'] == 'CWS':
+            cwsToList = list()
+            for i in transferList.values('toCategory').annotate(amt=Sum('amount')):
+                cwsToList.append([Categories.objects.get(pk=i['toCategory']).name, i['amt']])
         categoryList = Categories.objects.filter(
                                     userID=loggedInUser.pk,
                                     )
         form = filterForm(categoryList, initial={
                                                 "fromCategory": request.POST['fromCategory'],
-                                                'toCategory': request.POST['toCategory']
+                                                'toCategory': request.POST['toCategory'],
+                                                'timeSortType': request.POST['timeSortType']
                                                 })
     else:
         transferList = Transfers.objects.filter(

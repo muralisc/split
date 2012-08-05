@@ -21,7 +21,7 @@
 			$(document).ready(function() {
 				$("input[type=text]").addClass("span9");
 				$("input[type=password]").addClass("span9");
-				$("li:contains({{loggedInUser.group.name}})").addClass("active");
+				$("li#liTabs:contains({{loggedInUser.group.name}})").addClass("active");
 				$("li#liTabs > a").click( function(event){
 					event.preventDefault();
 					$.get('/tabClick/'+$(this).attr("rel"),function(){

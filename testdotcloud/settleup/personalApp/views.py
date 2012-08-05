@@ -10,6 +10,7 @@ from personalApp.forms import transferForm, filterForm, CreateCategory
 # Python imports
 import datetime
 import itertools
+import decimal
 # TODO user support for pf
 
 
@@ -37,7 +38,6 @@ def from_category_view(request):
         fromDistinct = Categories.objects.filter(
                                     userID=loggedInUser.pk,
                                     category_type='source'
-
                                     )
     return render_to_response('personalTemplates/fromSelect.html', locals(), context_instance=RequestContext(request))
 
@@ -50,11 +50,9 @@ def to_category_view(request):
     if 'currentTransfer' not in request.session:
         return redirect('/personalApp/fromCategory/')
     else:
-        import pdb; pdb.set_trace() ### XXX BREAKPOINT
         if request.method == "POST":
             form = transferForm(request.POST)
             if form.is_valid():
-                import pdb; pdb.set_trace() ### XXX BREAKPOINT
                 if 'toSelected' in request.POST:
                     currentTransfer = request.session['currentTransfer']
                     currentTransfer.toCategory_id = request.POST['toSelected']
@@ -73,6 +71,10 @@ def to_category_view(request):
                                     userID=loggedInUser.pk,
                                     category_type='leach'
                                     )
+            fromDistinct = Categories.objects.filter(
+                                        userID=loggedInUser.pk,
+                                        category_type='source'
+                                        )
     return render_to_response('personalTemplates/toSelect.html', locals(), context_instance=RequestContext(request))
 
 
@@ -177,7 +179,6 @@ def time_view(request):
     if 'currentTransfer' not in request.session:
         return redirect('/personalApp/fromCategory/')
     else:
-        form = transferForm()
         if request.method == "POST":
             form = transferForm(request.POST)
             if form.is_valid():
@@ -197,23 +198,38 @@ def time_view(request):
                     return redirect('/personalApp/summary/')
                 else:
                     errors = "enter some time"
+        else:
+            form = transferForm()
+            currentTransfer = request.session['currentTransfer']
     return render_to_response('personalTemplates/timeSelect.html', locals(), context_instance=RequestContext(request))
 
 
 def summary(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
     if 'currentTransfer' not in request.session:
         return redirect('/personalApp/fromCategory/')
     else:
         currentTransfer = request.session['currentTransfer']
         # if request.method == "POST":
+        currentTransfer.userID = loggedInUser.pk
         currentTransfer.save()
-        request.session.flush()
+        if 'currentTransfer' in request.session:
+            del request.session['currentTransfer']
+        if 'newCategory' in request.session:
+            del request.session['newCategory']
+        if 'nextLink' in request.session:
+            del request.session['nextLink']
         return redirect('/personalApp/fromCategory/')
-    # this is stll here beacuse --> just in case
-    return render_to_response('personalTemplates/summary.html', locals(), context_instance=RequestContext(request))
 
 
 def statistics(request):
+    if 'sUserId' not in request.session:
+        return redirect('/')
+    else:
+        loggedInUser = users.objects.get(pk=request.session['sUserId'])
     transferFilters = Q()
     if request.method == "POST":
         # form = filterForm(transferList, request.POST)
@@ -222,9 +238,9 @@ def statistics(request):
             Transfers.objects.get(pk=xferIdToDelete).delete()
         # filter the data based in the filters
         if request.POST['fromCategory'] != '':
-            transferFilters = transferFilters & Q(fromCategory__exact=request.POST['fromCategory'])
+            transferFilters = transferFilters & Q(fromCategory_id=request.POST['fromCategory'])
         if request.POST['toCategory'] != '':
-            transferFilters = transferFilters & Q(toCategory__exact=request.POST['toCategory'])
+            transferFilters = transferFilters & Q(toCategory_id=request.POST['toCategory'])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
         transferList = Transfers.objects.filter(transferFilters)
@@ -236,37 +252,57 @@ def statistics(request):
                 for i in gByDay:
                     sumOfAmounts += i.amount
                 newList.append([sumOfAmounts, i.timestamp.date().strftime("%d/%m/%y")])
-        form = filterForm(transferList, initial={
+        categoryList = Categories.objects.filter(
+                                    userID=loggedInUser.pk,
+                                    )
+        form = filterForm(categoryList, initial={
                                                 "fromCategory": request.POST['fromCategory'],
                                                 'toCategory': request.POST['toCategory']
                                                 })
     else:
-        transferList = Transfers.objects.filter(transferFilters)
-        form = filterForm(transferList)
-    # category sum
+        transferList = Transfers.objects.filter(
+                                    transferFilters,
+                                    userID=loggedInUser.pk)
+        categoryList = Categories.objects.filter(
+                                    userID=loggedInUser.pk,
+                                    )
+        form = filterForm(categoryList)
+    # category sum--------------------------------------
     fromCategorySum = Transfers.objects.values(
-                                'fromCategory'
+                                'fromCategory_id'
                                 ).annotate(
                                 sum_source=Sum('amount')
                                 )
     categoryDict = dict()
     for iDict in fromCategorySum:
-        categoryDict[iDict['fromCategory']] = -iDict['sum_source']
+        categoryDict[iDict['fromCategory_id']] = -iDict['sum_source']
     toCategorySum = Transfers.objects.values(
-                                'toCategory'
+                                'toCategory_id'
                                 ).annotate(
                                 sum_dest=Sum('amount')
                                 )
     for iDict in toCategorySum:
-        if iDict['toCategory'] in categoryDict.keys():
-            categoryDict[iDict['toCategory']] += iDict['sum_dest']
+        if iDict['toCategory_id'] in categoryDict.keys():
+            categoryDict[iDict['toCategory_id']] += iDict['sum_dest']
         else:
-            categoryDict[iDict['toCategory']] = iDict['sum_dest']
-    categoryTotalList = list()
+            categoryDict[iDict['toCategory_id']] = iDict['sum_dest']
+    for i in categoryList:
+        if i.pk in categoryDict:
+            categoryDict[i.pk] += decimal.Decimal(str(i.initial_amt))
+        else:
+            categoryDict[i.pk] = decimal.Decimal(str(i.initial_amt))
+    categorySourceList = list()
+    categoryLeachList = list()
+    sourceList = Categories.objects.filter(userID=loggedInUser.pk, category_type='source').values('id')
+    leachList = Categories.objects.filter(userID=loggedInUser.pk, category_type='leach').values('id')
     for key, value in categoryDict.iteritems():
-        categoryTotalList.append([key, value])
+        if {'id': key} in sourceList:
+            categorySourceList.append([Categories.objects.get(pk=key).name, value])
+        if {'id': key} in leachList:
+            categoryLeachList.append([Categories.objects.get(pk=key).name, value])
     # insted of lambda fn you can use itemgetter
-    categoryTotalList = sorted(categoryTotalList, key=lambda student: student[1], reverse=True)
+    categorySourceList = sorted(categorySourceList, key=lambda x: x[1], reverse=True)
+    categoryLeachList = sorted(categoryLeachList, key=lambda x: x[1], reverse=True)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))
 
 
@@ -278,5 +314,13 @@ def create_category_view(request):
             categoryObject = form.save(commit=False)
             categoryObject.userID = users.objects.get(pk=request.session['sUserId']).pk
             categoryObject.save()
+            if request.session['nextLink'] == '/personalApp/amount/':
+                currentTransfer = request.session['currentTransfer']
+                currentTransfer.toCategory_id = categoryObject.pk
+                request.session['currentTransfer'] = currentTransfer
+            if request.session['nextLink'] == '/personalApp/toCategory/':
+                currentTransfer = Transfers()
+                currentTransfer.fromCategory_id = request.POST['fromSelected']
+                request.session['currentTransfer'] = currentTransfer
             return redirect(request.session['nextLink'])
     return render_to_response('personalTemplates/createCategory.html', locals(), context_instance=RequestContext(request))

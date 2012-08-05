@@ -21,8 +21,8 @@ Select From Category
 <a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
 <form align="center" action="" method="POST">
 	{% csrf_token %} 
-	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
-	<b>{{ currentTransfer.toCategory }}</b>
+	<b>{{ currentTransfer.fromCategory.name }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory.name }}</b>
 	<!-- -->
 	<div class="input-append">
 		{{form.amount}}<button name="nextPage" class="btn" type="submit">Go!</button><button name="finish" class="btn btn-success" type="submit">Thats it!</button>

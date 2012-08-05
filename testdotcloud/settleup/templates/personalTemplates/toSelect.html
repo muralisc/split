@@ -7,7 +7,8 @@ Select To Category
 		$(document).ready(function() {
 			$("a.options").click( function(event){
 				event.preventDefault();
-				$("input[type='text']").val($(this).html());
+				var input = $("<input>").attr("type", "hidden").attr("name", "toSelected").val($(this).attr("rel"));
+				$('#form1').append($(input));	
 				$('button[name="nextPage"]').click()
 			});
 		});
@@ -20,17 +21,21 @@ Select To Category
 </div>
 <div class="span4" align="right">
 <a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
-<form align="center" action="" method="POST">
+<form id="form1" align="center" action="" method="POST">
 	{% csrf_token %} 
-	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.fromCategory.name }}</b> <i class="icon-arrow-right"></i>
 	<!-- -->
 	<div class="input-append">
 		{{form.toCategory}}<button name="nextPage" class="btn" type="submit">Go!</button>
 	</div>
 	{{ errors }}
 	<ul align="center" class="nav nav-list">
-		{% for i in optionList %}
-			<li><a class="options" href="#">{{ i }}</a></li>
+		{% for i in toDistinct %}
+			<li><a class="options" rel="{{i.pk}}" href="#">{{ i.name }}</a></li>
+		{% endfor %}
+		<li class="nav-header">source for transfer</li>
+		{% for i in fromDistinct %}
+			<li><a class="options" rel="{{ i.pk }}" href="#">{{ i.name }}</a></li>
 		{% endfor %}
 	</ul>
 </form>

@@ -13,8 +13,8 @@ Select From Category
 <a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
 <form action="" align="center" method="POST">
 	{% csrf_token %} 
-	<b>{{ currentTransfer.fromCategory }}</b> <i class="icon-arrow-right"></i>
-	<b>{{ currentTransfer.toCategory }}</b>
+	<b>{{ currentTransfer.fromCategory.name }}</b> <i class="icon-arrow-right"></i>
+	<b>{{ currentTransfer.toCategory.name }}</b>
 	<h4>{{ currentTransfer.amount }}</h4>
 	<h5>{{ currentTransfer.description }}</h5>
 	<!-- -->

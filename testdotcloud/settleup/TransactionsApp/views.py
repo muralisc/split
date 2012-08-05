@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.db.models import Sum
 #from TransactionsApp.forms import
 from TransactionsApp.models import users, transactions, quotes, PostsTable, GroupsTable
+from personalApp.models import Transfers, Categories
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm, GroupForm
 # Python imports
 import urllib
@@ -643,6 +644,7 @@ def transaction_detail(request, kind):
     for usr in outstanding_userstable:
         aaa = usr.transactions_set1.filter(
                                     group=loggedInUser.group,
+                                    deleted__exact=False,
                                     ).aggregate(Sum('perpersoncost'))['perpersoncost__sum']
         if aaa != None:
             actual_expenditure.append(aaa)

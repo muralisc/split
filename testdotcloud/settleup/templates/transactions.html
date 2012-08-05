@@ -82,6 +82,7 @@ Transaction
 			   {% csrf_token %}
 				<div>{{form.description}}{{form.description.errors}}</div>
 				<div>{{form.amount}}{{form.amount.errors}}</div>
+				<div>{{smallForm.fromForTransactions}}</div>
 				<div>{{form.user_paid.label}}</div>
 				<div>{{form.user_paid}}{{form.user_paid.errors}}</div>
 				<div>{{form.users_involved.label_tag}}</div>

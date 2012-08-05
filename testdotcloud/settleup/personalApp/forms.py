@@ -14,6 +14,7 @@ class transferForm(forms.Form):   # {{{
 
 
 class filterForm(forms.Form):
+    fromForTransactions = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span9'}), required=False)
     fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), empty_value="------", required=False)
     toCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
     amount = forms.CharField(widget=forms.TextInput(attrs={'class': 'filters span12'}), required=False)
@@ -24,6 +25,7 @@ class filterForm(forms.Form):
 
     def __init__(self, dbrows, *args, **kwargs):
         super(filterForm, self).__init__(*args, **kwargs)
+        self.fields['fromForTransactions'].choices = ((x.pk, x.name) for x in dbrows.filter(category_type='source'))
         self.fields['fromCategory'].choices = ((x.pk, x.name) for x in dbrows.filter(category_type='source'))
         self.fields['fromCategory'].choices.insert(0, ('', '---------'))
         self.fields['fromCategory'].choices.insert(1, ('CWS', 'CATEGORY WISE SPLIT'))

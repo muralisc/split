@@ -8,6 +8,7 @@ from django.db.models import Sum
 from TransactionsApp.models import users, transactions, quotes, PostsTable, GroupsTable
 from personalApp.models import Transfers, Categories
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm, GroupForm
+from personalApp.forms import filterForm
 # Python imports
 import urllib
 import csv
@@ -459,6 +460,16 @@ def transaction_create_display(request, kind):
             transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
             transactionsObj.group = users.objects.get(pk=request.session['sUserId']).group
             transactionsObj.save()
+            # for personalApp
+            if 'userUsesPersonalApp' in request.session and request.session['userUsesPersonalApp'] == True:
+                currentTransfer = Transfers()
+                currentTransfer.fromCategory_id = request.POST['fromForTransactions']
+                currentTransfer.toCategory_id = Categories.objects.filter(userID=request.session['sUserId']).get(name='split').id
+                currentTransfer.amount = form.cleaned_data['amount']
+                currentTransfer.description = form.cleaned_data['description']
+                currentTransfer.timestamp = datetime.datetime.now()
+                currentTransfer.userID = users.objects.get(pk=request.session['sUserId']).pk
+                currentTransfer.save()
             # outdtanding field
             involvedList = list(transactionsObj.users_involved.all())
             changeDict = dict()
@@ -502,6 +513,17 @@ def transaction_create_display(request, kind):
         # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
         form = transactionsForm(loggedInUser)
+        # check if user users personal aPP
+        if {'userID': loggedInUser.pk} in Categories.objects.values('userID').distinct():
+            userUsesPersonalApp = 1
+            request.session['userUsesPersonalApp'] = True
+            categoryList = Categories.objects.filter(
+                                        userID=loggedInUser.pk,
+                                        )
+            smallForm = filterForm(categoryList)
+        else:
+            userUsesPersonalApp = None
+        # notifications count fetch
         try:
             noOfNewNoti = PostsTable.objects.filter(
                                                     id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id

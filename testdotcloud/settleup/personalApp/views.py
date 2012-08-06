@@ -293,9 +293,9 @@ def statistics(request):
             categoryDict[iDict['toCategory_id']] = iDict['sum_dest']
     for i in categoryList:
         if i.pk in categoryDict:
-            categoryDict[i.pk] += decimal.Decimal(str(i.initial_amt))
+            categoryDict[i.pk] += i.initial_amt
         else:
-            categoryDict[i.pk] = decimal.Decimal(str(i.initial_amt))
+            categoryDict[i.pk] = i.initial_amt
     categorySourceList = list()
     categoryLeachList = list()
     sourceList = Categories.objects.filter(userID=loggedInUser.pk, category_type='source').values('id')

@@ -467,7 +467,7 @@ def transaction_create_display(request, kind):
                 currentTransfer = Transfers()
                 currentTransfer.fromCategory_id = request.POST['fromForTransactions']
                 currentTransfer.toCategory_id = Categories.objects.filter(userID=request.session['sUserId']).get(name='split').id
-                currentTransfer.amount = decimal.Decimal(form.cleaned_data['amount'])
+                currentTransfer.amount = form.cleaned_data['amount']
                 currentTransfer.description = form.cleaned_data['description']
                 currentTransfer.timestamp = datetime.datetime.now()
                 currentTransfer.userID = users.objects.get(pk=request.session['sUserId']).pk

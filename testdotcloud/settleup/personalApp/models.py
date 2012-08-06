@@ -11,7 +11,7 @@ class Categories(models.Model):
 class Transfers(models.Model):
     fromCategory = models.ForeignKey('Categories', blank=True, null=True, related_name='transfers_fromCategory')
     toCategory = models.ForeignKey('Categories', blank=True, null=True, related_name='transfers_toCategory')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
+    amount = models.FloatField(blank=True, null=True)
     description = models.CharField(max_length=100, blank=True)
     timestamp = models.DateTimeField(blank=True)
     deleted = models.BooleanField(default=False, blank=True)

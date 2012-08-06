@@ -28,10 +28,10 @@ import itertools
 def login(request):  # {{{
     try:
         if request.session.get('sUserId', False):
-            loggedInUser = users.objects.get(pk=request.session['sUserId'])
-            userFullName = loggedInUser.name
-            if (loggedInUser.group):
-                update_outstanding(loggedInUser.group)
+            loggedInUser = users.objects.filter(pk__exact=request.session['sUserId']).values()
+            userFullName = loggedInUser[0]['name']
+            if (loggedInUser[0]['group']):
+                update_outstanding(loggedInUser[0]['group'])
                 return redirect('/transactions/' + userFullName)
             else:
                 return redirect('/home/')
@@ -41,9 +41,9 @@ def login(request):  # {{{
         form = loginForm(request.POST)
         if form.is_valid():
             memberQuerySet = users.objects.filter(
-            username__exact=form.cleaned_data['username']
-            ).filter(
-            password__exact=form.cleaned_data['password'])
+                                        username__exact=form.cleaned_data['username']
+                                        ).filter(
+                                        password__exact=form.cleaned_data['password'])
             if memberQuerySet.count() == 0:
                 loginMessage = "Invalid username or password"
             else:

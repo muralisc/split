@@ -53,7 +53,9 @@ class transactions(models.Model):   # {{{
             this will always be positive
         '''
         cost = 0
-        if self.user_paid in list(self.users_involved.all()):
+        users_involvedList = self.users_involved.values_list('id')
+        userID = self.user_paid_id
+        if userID in users_involvedList:
             cost = self.amount - self.perpersoncost
         else:
             cost = self.amount

@@ -8,14 +8,13 @@ from django.db.models import Sum
 from TransactionsApp.models import users, transactions, quotes, PostsTable, GroupsTable
 from personalApp.models import Transfers, Categories
 from TransactionsApp.forms import loginForm, transactionsForm, addUserForm, PostsForm, PasswordChangeForm, GroupForm
-from personalApp.forms import filterForm
+from personalApp.forms import formForTransactions
 # Python imports
 import urllib
 import csv
 import re
 import random
 import datetime
-import decimal
 from json import JSONEncoder
 import itertools
 
@@ -65,7 +64,7 @@ def login(request):  # {{{
 
 def logout(request):  # {{{
     if request.session.get('sUserId', False):
-        del request.session['sUserId']
+        request.session.flush()
         return redirect('/')
     else:
         return redirect('/')
@@ -514,7 +513,6 @@ def transaction_create_display(request, kind):
     else:
         # for a fresh load of url
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
-        update_outstanding(loggedInUser.group)
         form = transactionsForm(loggedInUser)
         # check if user users personal aPP
         if {'userID': loggedInUser.pk} in Categories.objects.values('userID').distinct():
@@ -523,17 +521,17 @@ def transaction_create_display(request, kind):
             categoryList = Categories.objects.filter(
                                         userID=loggedInUser.pk,
                                         )
-            smallForm = filterForm(categoryList)
+            smallForm = formForTransactions(categoryList)
         else:
             userUsesPersonalApp = None
         # notifications count fetch
         try:
             noOfNewNoti = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification.id
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastNotification_id
                                                     ).filter(
                                                     PostType__exact='noti'
                                                     ).filter(
-                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
+                                                    audience__in=[loggedInUser.id]
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastNotification == None:
@@ -542,11 +540,11 @@ def transaction_create_display(request, kind):
             noOfNewNoti = 0
         try:
             noOfNewPosts = PostsTable.objects.filter(
-                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastPost.id
+                                                    id__gt=users.objects.get(pk=request.session['sUserId']).lastPost_id
                                                     ).filter(
                                                     PostType__exact='post'
                                                     ).filter(
-                                                    audience__in=[users.objects.get(pk=request.session['sUserId']).id]
+                                                    audience__in=[loggedInUser.id]
                                                     ).count()
         except:
             if PostsTable.objects.count() > 0 and loggedInUser.lastPost == None:
@@ -555,7 +553,7 @@ def transaction_create_display(request, kind):
             noOfNewPosts = 0
     outstanding_userstable = users.objects.filter(
                                             deleted__exact=False,
-                                            name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()],
+                                            name__in=loggedInUser.group.members.values_list('name'),
                                             ).order_by('-outstanding')
     changeList = list()
     if 'changeDict' in request.session:

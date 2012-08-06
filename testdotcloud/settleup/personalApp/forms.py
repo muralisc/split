@@ -13,8 +13,15 @@ class transferForm(forms.Form):   # {{{
     timestamp = forms.DateTimeField(widget=forms.TextInput(attrs={'class': 'span9', 'placeholder': '%m/%d/%Y'}), required=False)
 
 
-class filterForm(forms.Form):
+class formForTransactions(forms.Form):
     fromForTransactions = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span9'}), required=False)
+
+    def __init__(self, dbrows, *args, **kwargs):
+        super(formForTransactions, self).__init__(*args, **kwargs)
+        self.fields['fromForTransactions'].choices = ((x['pk'], x['name']) for x in dbrows.filter(category_type='source').values('pk', 'name'))
+
+
+class filterForm(forms.Form):
     fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), empty_value="------", required=False)
     toCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
     amount = forms.CharField(widget=forms.TextInput(attrs={'class': 'filters span12'}), required=False)
@@ -25,11 +32,10 @@ class filterForm(forms.Form):
 
     def __init__(self, dbrows, *args, **kwargs):
         super(filterForm, self).__init__(*args, **kwargs)
-        self.fields['fromForTransactions'].choices = ((x.pk, x.name) for x in dbrows.filter(category_type='source'))
-        self.fields['fromCategory'].choices = ((x.pk, x.name) for x in dbrows.filter(category_type='source'))
+        self.fields['fromCategory'].choices = ((x['pk'], x['name']) for x in dbrows.filter(category_type='source').values('pk', 'name'))
         self.fields['fromCategory'].choices.insert(0, ('', '---------'))
         self.fields['fromCategory'].choices.insert(1, ('CWS', 'CATEGORY WISE SPLIT'))
-        self.fields['toCategory'].choices = ((x.pk, x.name) for x in dbrows.filter(category_type='leach'))
+        self.fields['toCategory'].choices = ((x['pk'], x['name']) for x in dbrows.filter(category_type='leach').values('pk', 'name'))
         self.fields['toCategory'].choices.insert(0, ('', '---------'))
         self.fields['toCategory'].choices.insert(1, ('CWS', 'CATEGORY WISE SPLIT'))
         self.fields['timeSortType'].choices = (('Month', 'Month'), ('Week', 'Week'), ('Day', 'Day'))

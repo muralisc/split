@@ -18,10 +18,10 @@ class transactionsForm(forms.ModelForm):   # {{{
         super(transactionsForm, self).__init__(*args, **kwargs)
         # change a widget attribute:
         self.fields['users_involved'].queryset = users.objects.filter(
-                                                    Q(name__in=[tempUsr.name for tempUsr in usr.group.members.all()]),
+                                                    Q(name__in=usr.group.members.values_list('name')),
                                                     )
         self.fields['user_paid'].queryset = users.objects.filter(
-                                                    Q(name__in=[tempUsr.name for tempUsr in usr.group.members.all()]),
+                                                    Q(name__in=usr.group.members.values_list('name')),
                                                     )
 
     class Meta:

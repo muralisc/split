@@ -46,7 +46,7 @@ class transactions(models.Model):   # {{{
     group = models.ForeignKey(GroupsTable, blank=True, null=True, related_name='transactions_group')
 
     def __unicode__(self):
-        return str(self.id)
+        return str("%s\n" % self.id)
 
     def _get_user_paid_cost(self):
         '''
@@ -55,7 +55,8 @@ class transactions(models.Model):   # {{{
         cost = 0
         users_involvedList = self.users_involved.values_list('id')
         userID = self.user_paid_id
-        if userID in users_involvedList:
+        if (userID,) in users_involvedList:
+            # or use zip(*users_involvedList)[0]
             cost = self.amount - self.perpersoncost
         else:
             cost = self.amount

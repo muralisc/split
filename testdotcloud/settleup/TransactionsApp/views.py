@@ -29,8 +29,8 @@ def login(request):  # {{{
         if request.session.get('sUserId', False):
             loggedInUser = users.objects.filter(pk__exact=request.session['sUserId']).values()
             userFullName = loggedInUser[0]['name']
-            if (loggedInUser[0]['group']):
-                update_outstanding(loggedInUser[0]['group'])
+            if (loggedInUser[0]['group_id']!= None):
+                update_outstanding(GroupsTable.objects.get(pk=loggedInUser[0]['group_id']))
                 return redirect('/transactions/' + userFullName)
             else:
                 return redirect('/home/')
@@ -364,6 +364,9 @@ def home_page(request):
     user_groups = loggedInUser.groupsTable_members.all()
     return render_to_response('home.html', locals(), context_instance=RequestContext(request))
 
+def resume(request):
+    return render_to_response('resume.html', locals(), context_instance=RequestContext(request))
+
 
 def search(request, kind):
     if kind == 'users':
@@ -572,41 +575,35 @@ def transaction_detail(request, kind):
     if 'sUserId' not in request.session:
         return redirect('/')
     else:
-        userFullName = users.objects.get(pk=request.session['sUserId']).name
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
-    if not loggedInUser.group:
+        userFullName = loggedInUser.name
+    if loggedInUser.group_id == None:
         return redirect('/home/')
     userstable = users.objects.filter(deleted__exact=False,
-                                            name__in=[tempUsr.name for tempUsr in loggedInUser.group.members.all()])
+                                        name__in=loggedInUser.group.members.values_list('name'))
     txnstable = transactions.objects.filter(deleted__exact=False, group=loggedInUser.group)
-    if txnstable:
+    if txnstable != None:
         rows = {}
         for i in userstable:
             # make the sample row dictionary for the "newtable"
-            rows.update({i.username: 0})
+            rows.update({i.id: 0})
         table = [dict(rows) for k in range(txnstable.count())]
         i = 0
         # fetch each transaction database row
         for i, curtxn in enumerate(txnstable):
-            if i == 0:
-                table[i][curtxn.user_paid.username] += curtxn.amount
-                perpersoncost = curtxn.amount / curtxn.users_involved.count()
-                for usrinv in curtxn.users_involved.all():
-                    table[i][usrinv.username] -= perpersoncost
-            if i != 0:
-                table[i][curtxn.user_paid.username] += curtxn.amount
-                perpersoncost = curtxn.amount / curtxn.users_involved.count()
-                for usrinv in curtxn.users_involved.all():
-                    # populating "table" a list of dictionaries
-                    table[i][usrinv.username] -= perpersoncost
+            table[i][curtxn.user_paid_id] += curtxn.amount
+            perpersoncost = curtxn.perpersoncost
+            for (usrinvID,) in curtxn.users_involved.values_list('id'):
+                # populating "table" a list of dictionaries
+                table[i][usrinvID] -= perpersoncost
         newtable = [list([None] * (len(userstable) * 2 + 6)) for k in txnstable]
         for i, I in enumerate(table):
             for j, J in enumerate(userstable):
                 if i == 0:
-                    newtable[i][j + 6] = table[i][J.username]
-                    newtable[i][j + len(userstable) + 6] = table[i][J.username]
+                    newtable[i][j + 6] = table[i][J.id]
+                    newtable[i][j + len(userstable) + 6] = table[i][J.id]
                 else:
-                    newtable[i][j + 6] = table[i][J.username]
+                    newtable[i][j + 6] = table[i][J.id]
                     newtable[i][j + len(userstable) + 6] = newtable[i][j + 6] + newtable[i - 1][j + len(userstable) + 6]
         for i, row in enumerate(txnstable):
             newtable[i][0] = row.id
@@ -652,8 +649,6 @@ def transaction_detail(request, kind):
                     t.append(i[5 + userpos + usercount])
                     newtable.append(t)
         newtable.reverse()
-        if loggedInUser.username == 'admin':
-            request.session['newtable'] = newtable
     ### END OF if txnstable:
     # integrity checks
     sumOfAllOutstanding = 0
@@ -714,6 +709,7 @@ def update_outstanding(current_group):
                 group=current_group,
                 deleted=False
                 ).aggregate(Sum('perpersoncost'))['perpersoncost__sum']
-        if tempsum:
+        if tempsum != None:
             usr.outstanding -= tempsum
         usr.save()
+

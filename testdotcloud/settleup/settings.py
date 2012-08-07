@@ -11,7 +11,8 @@ except:                                                             # DEVELOPMEN
 settings_dir = os.path.dirname(__file__)
 PROJECT_ROOT = os.path.abspath(os.path.dirname(settings_dir))
 
-DEBUG = True
+#DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -163,8 +164,8 @@ INSTALLED_APPS = (
     'TransactionsApp',
     'personalApp',
     'south',
-    'debug_toolbar',
-    'django_extensions',
+    #'debug_toolbar',
+    #'django_extensions',
 )
 
 # A sample logging configuration. The only tangible logging

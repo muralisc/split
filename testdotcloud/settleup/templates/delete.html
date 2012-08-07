@@ -17,9 +17,7 @@ delete {{ deleteType }}
                     <td>{{ row.username }}</td>
                     <td>{{ row.amount  }}</td>
                     <td>{{ row.user_paid  }}</td>
-                    <td>
-                        {% for ui_rows in row.users_involved.all  %}{{ui_rows.username|add:" "}}{%endfor%}
-                    </td>
+                    <td>{{ row.description  }}</td>
                     <td>{{ row.timestamp  }}</td>
                     <td><a href="/deleteTransactions/{{ row.id }}/">delete</a></td>
                 </tr>

@@ -232,7 +232,6 @@ def statistics(request):
         loggedInUser = users.objects.get(pk=request.session['sUserId'])
     transferFilters = Q(userID=loggedInUser.pk)
     if request.method == "POST":
-        # form = filterForm(transferList, request.POST)
         if 'delete' in request.POST:
             xferIdToDelete = request.POST['delete']
             Transfers.objects.get(pk=xferIdToDelete).delete()
@@ -243,6 +242,12 @@ def statistics(request):
             transferFilters = transferFilters & Q(toCategory_id=request.POST['toCategory'])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
+        form = filterForm(None, request.POST)
+        if form.is_valid():
+            if request.POST['timeStart'] != '':
+                transferFilters = transferFilters & Q(timestamp__gte=form.cleaned_data['timeStart'])
+            if request.POST['timeEnd'] != '':
+                transferFilters = transferFilters & Q(timestamp__lte=form.cleaned_data['timeEnd'])
         transferList = Transfers.objects.filter(transferFilters)
         # use filtered transfer list insted of this    transferList = Transfers.objects.all()
         if request.POST['timeSortType'] == 'Day':
@@ -251,7 +256,7 @@ def statistics(request):
                 sumOfAmounts = 0
                 for i in gByDay:
                     sumOfAmounts += i.amount
-                newList.append([sumOfAmounts, i.timestamp.date().strftime("%d/%m/%y")])
+                newList.append([sumOfAmounts, i.timestamp.date().strftime("%b %d, %Y")])
         if request.POST['toCategory'] == 'CWS':
             cwsToList = list()
             for i in transferList.values('toCategory').annotate(amt=Sum('amount')):
@@ -262,7 +267,9 @@ def statistics(request):
         form = filterForm(categoryList, initial={
                                                 "fromCategory": request.POST['fromCategory'],
                                                 'toCategory': request.POST['toCategory'],
-                                                'timeSortType': request.POST['timeSortType']
+                                                'timeSortType': request.POST['timeSortType'],
+                                                'timeStart': request.POST['timeStart'],
+                                                'timeEnd': request.POST['timeEnd'],
                                                 })
     else:
         transferList = Transfers.objects.filter(
@@ -325,7 +332,7 @@ def create_category_view(request):
                 request.session['currentTransfer'] = currentTransfer
             if request.session['nextLink'] == '/personalApp/toCategory/':
                 currentTransfer = Transfers()
-                currentTransfer.fromCategory_id = request.POST['fromSelected']
+                currentTransfer.toCategory_id = categoryObject.pk
                 request.session['currentTransfer'] = currentTransfer
             return redirect(request.session['nextLink'])
     return render_to_response('personalTemplates/createCategory.html', locals(), context_instance=RequestContext(request))

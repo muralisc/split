@@ -7,7 +7,7 @@ summary
 <script src="{{ STATIC_URL }}highcharts/js/modules/exporting.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-      {% for row in newList %}
+      {% if newList != None %}
 	  chart1 = new Highcharts.Chart({
          chart: {
             renderTo: 'container',
@@ -25,7 +25,35 @@ $(document).ready(function() {
          },
          yAxis: {
             title: {
-               text: 'Fruit eaten'
+               text: 'Amount spend'
+            }
+         },
+         tooltip: {
+            enabled: true,
+            formatter: function() {
+                return '<b>'+this.x+'</b><br/>'+ this.series.name +': '+ this.y ;
+            }
+         }, 
+         plotOptions: {
+            line: {
+                dataLabels: {
+                    enabled: true
+                },
+            },
+            series: {
+                point: {
+                    events: {
+                        click: function() {
+                                var d = new Date(this.category);
+                                var month = d.getMonth() + 1;
+                                $("#id_timeStart").val(month+'/'+d.getDate()+'/'+d.getFullYear());
+                                $("#id_timeEnd").val(month+'/'+d.getDate()+'/'+d.getFullYear());
+                                $("#id_timeSortType").val("");
+                                $("#id_toCategory").val("CWS");
+                                $("#formID").submit();
+                                }
+                    }
+                }
             }
          },
          series: [{
@@ -37,11 +65,29 @@ $(document).ready(function() {
 					]
          }]
       });
-      {% endfor %}
+      {% endif %}
+      $(".span5").hide();
       $("select.filters").change(function(){
 			$("#formID").submit();
       });
-				
+      $("#id_timeStart").blur(function(){
+			$("#id_timeEnd").focus().select();
+      });
+      $("#id_timeEnd").blur(function(){
+			$("#formID").submit();
+      });
+	  $(".date").hover(
+            function(){ $(this).css({'cursor': 'pointer', 'background-color': 'red'})},
+            function(){ $(this).css({'cursor': 'auto', 'background-color': 'transparent'})}
+      );	
+	  $(".date").click(function(){
+        var d = new Date($(this).text())
+        var month = d.getMonth() + 1
+        $("#id_timeStart").val(month+'/'+d.getDate()+'/'+d.getFullYear());
+        $("#id_timeEnd").val(month+'/'+d.getDate()+'/'+d.getFullYear());
+        $("#id_timeSortType").val("");
+        $("#formID").submit();
+      });
    });
 </script>
 {% endblock %}
@@ -96,7 +142,7 @@ each category over time
 				<td>delete</td>
 			</tr>
 		</thead>
-		{% if newList == None and cwsToList == None%}
+		{% if newList == None and cwsToList == None %}
 			{% for row in transferList %}
 			<tr>
 				<td>{{ row.id }}</td>
@@ -118,7 +164,7 @@ each category over time
 			<td></td>
 			<td>{{ row.0 }}</td>
 			<td></td>
-			<td>{{ row.1  }}</td>
+			<td class="date">{{ row.1 }}</td>
 			<td></td>
 			<td><a href="">edit</a></td>
 			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>

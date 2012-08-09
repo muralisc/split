@@ -22,24 +22,42 @@ class formForTransactions(forms.Form):
 
 
 class filterForm(forms.Form):
-    fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), empty_value="------", required=False)
+    fromCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
     toCategory = forms.TypedChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
     amount = forms.CharField(widget=forms.TextInput(attrs={'class': 'filters span12'}), required=False)
     description = forms.CharField(widget=forms.TextInput(attrs={'class': 'filters span12'}), required=False)
-    timeStart = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'Start (%m %d)'}), input_formats='%m %d', required=False)
-    timeEnd = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'End (%m %d)'}), input_formats='%m %d', required=False)
-    timeSortType = forms.ChoiceField(widget=forms.Select(attrs={'class': 'filters span12'}), required=False)
+    timeStart = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'Start Time'}), required=False)
+    timeEnd = forms.DateField(widget=forms.TextInput(attrs={'class': 'filters span12', 'placeholder': 'End Time'}), required=False)
+    timeSortType = forms.ChoiceField(
+                                    widget=forms.Select(attrs={'class': 'filters span12'}),
+                                    choices=(('', '---------'), ('Month', 'Month'), ('Week', 'Week'), ('Day', 'Day')),
+                                    required=False
+                                    )
 
     def __init__(self, dbrows, *args, **kwargs):
         super(filterForm, self).__init__(*args, **kwargs)
-        self.fields['fromCategory'].choices = ((x['pk'], x['name']) for x in dbrows.filter(category_type='source').values('pk', 'name'))
-        self.fields['fromCategory'].choices.insert(0, ('', '---------'))
-        self.fields['fromCategory'].choices.insert(1, ('CWS', 'CATEGORY WISE SPLIT'))
-        self.fields['toCategory'].choices = ((x['pk'], x['name']) for x in dbrows.filter(category_type='leach').values('pk', 'name'))
-        self.fields['toCategory'].choices.insert(0, ('', '---------'))
-        self.fields['toCategory'].choices.insert(1, ('CWS', 'CATEGORY WISE SPLIT'))
-        self.fields['timeSortType'].choices = (('Month', 'Month'), ('Week', 'Week'), ('Day', 'Day'))
-        self.fields['timeSortType'].choices.insert(0, ('', '---------'))
+        if dbrows != None:
+            CHOICES = (('', '---------'), ('CWS', 'CATEGORY WISE SPLIT'))
+            fromCategory_CHOICES = [(x['pk'], x['name']) for x in dbrows.filter(category_type='source').values('pk', 'name')]
+            netFromCHOICES = CHOICES + tuple(fromCategory_CHOICES)
+            self.fields['fromCategory'] = forms.TypedChoiceField(
+                                                widget=forms.Select(attrs={'class': 'filters span12'}),
+                                                choices=netFromCHOICES,
+                                                required=False
+                                                )
+            toCategory_CHOICES = [(x['pk'], x['name']) for x in dbrows.filter(category_type='leach').values('pk', 'name')]
+            netToCHOICES = CHOICES + tuple(toCategory_CHOICES)
+            self.fields['toCategory'] = forms.TypedChoiceField(
+                                                widget=forms.Select(attrs={'class': 'filters span12'}),
+                                                choices=netToCHOICES,
+                                                required=False
+                                                )
+
+    def clean(self):
+        super(filterForm, self).clean()
+        if 'toCategory' in self._errors:
+            del self._errors['toCategory']
+        return self.cleaned_data
 
 
 class CreateCategory(forms.ModelForm):

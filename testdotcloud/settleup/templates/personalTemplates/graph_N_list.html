@@ -66,6 +66,44 @@ $(document).ready(function() {
          }]
       });
       {% endif %}
+      {% if cwsToList != None %}
+      chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container',
+            },
+            title: {
+                text: 'Browser market shares at a specific website, 2010'
+            },
+            tooltip: {
+                formatter: function() {
+                    return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+                }
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        color: '#000000',
+                        connectorColor: '#000000',
+                        formatter: function() {
+                            return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
+                        }
+                    }
+                }
+            },
+            series: [{
+                type: 'pie',
+                name: 'Browser share',
+                data: [
+					{% for row in cwsToList %}
+                    ['{{ row.0 }}',   {{ row.1 }}],
+					{% endfor %}
+                ]
+            }]
+        });
+      {% endif %}
       $(".span5").hide();
       $("select.filters").change(function(){
 			$("#formID").submit();

@@ -240,6 +240,8 @@ def statistics(request):
             transferFilters = transferFilters & Q(fromCategory_id=request.POST['fromCategory'])
         if request.POST['toCategory'] != '' and request.POST['toCategory'] != 'CWS':
             transferFilters = transferFilters & Q(toCategory_id=request.POST['toCategory'])
+        elif request.POST['toCategory'] == 'CWS':
+            transferFilters = transferFilters & Q(toCategory_id__in=[x for (x,) in Categories.objects.filter(category_type='leach').values_list('id')])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
         form = filterForm(None, request.POST)

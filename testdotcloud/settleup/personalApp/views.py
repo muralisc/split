@@ -10,7 +10,6 @@ from personalApp.forms import transferForm, filterForm, CreateCategory
 # Python imports
 import datetime
 import itertools
-import decimal
 # TODO user support for pf
 
 
@@ -244,12 +243,14 @@ def statistics(request):
             transferFilters = transferFilters & Q(toCategory_id__in=[x for (x,) in Categories.objects.filter(category_type='leach').values_list('id')])
         if request.POST['description'] != '':
             transferFilters = transferFilters & Q(description__exact=request.POST['description'])
+        if request.POST['timeSortType'] == 'Day':
+            transferFilters = transferFilters & Q(toCategory_id__in=[x for (x,) in Categories.objects.filter(category_type='leach').values_list('id')])
         form = filterForm(None, request.POST)
         if form.is_valid():
             if request.POST['timeStart'] != '':
                 transferFilters = transferFilters & Q(timestamp__gte=form.cleaned_data['timeStart'])
             if request.POST['timeEnd'] != '':
-                transferFilters = transferFilters & Q(timestamp__lte=form.cleaned_data['timeEnd'])
+                transferFilters = transferFilters & Q(timestamp__lt=form.cleaned_data['timeEnd'] + datetime.timedelta(days=1))
         transferList = Transfers.objects.filter(transferFilters)
         # use filtered transfer list insted of this    transferList = Transfers.objects.all()
         if request.POST['timeSortType'] == 'Day':

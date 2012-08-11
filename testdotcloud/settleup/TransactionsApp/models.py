@@ -42,8 +42,9 @@ class transactions(models.Model):   # {{{
     users_involved = models.ManyToManyField(users, related_name='transactions_set1')
     timestamp = models.DateTimeField(auto_now_add=True)
     perpersoncost = models.FloatField(blank=True, null=True)
-    deleted = models.BooleanField(default=False)
+    userPaidCost = models.FloatField(blank=True, null=True)
     group = models.ForeignKey(GroupsTable, blank=True, null=True, related_name='transactions_group')
+    deleted = models.BooleanField(default=False)
 
     def __unicode__(self):
         return str("%s\n" % self.id)

@@ -463,6 +463,16 @@ def transaction_create_display(request, kind):
             # perpersoncost field
             transactionsObj.perpersoncost = transactionsObj.amount / transactionsObj.users_involved.count()
             transactionsObj.group = users.objects.get(pk=request.session['sUserId']).group
+            # calculate the userpaidcost
+            tempCost = 0
+            users_involvedList = transactionsObj.users_involved.values_list('id')
+            userID = transactionsObj.user_paid_id
+            if (userID,) in users_involvedList:
+                # or use zip(*users_involvedList)[0]
+                tempCost = transactionsObj.amount - transactionsObj.perpersoncost
+            else:
+                tempCost = transactionsObj.amount
+            transactionsObj.userPaidCost = tempCost
             transactionsObj.save()
             # for personalApp
             if 'userUsesPersonalApp' in request.session and request.session['userUsesPersonalApp'] == True:
@@ -703,7 +713,7 @@ def update_outstanding(current_group):
     for usr in current_group.members.all():
         #for all the transaction in which 'usr' paid
         tempTxns = usr.transactions_set.filter(group=current_group, deleted=False)
-        usr.outstanding = sum([i._get_user_paid_cost() for i in tempTxns])
+        usr.outstanding = sum([i.userPaidCost for i in tempTxns])
         #for all the transaction in which 'usr' was jsut a member
         tempsum = usr.transactions_set1.filter(~Q(pk__in=[i.pk for i in tempTxns]),
                 group=current_group,
@@ -712,4 +722,3 @@ def update_outstanding(current_group):
         if tempsum != None:
             usr.outstanding -= tempsum
         usr.save()
-

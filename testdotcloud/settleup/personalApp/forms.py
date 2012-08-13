@@ -6,9 +6,9 @@ from personalApp.models import Categories
 
 
 class transferForm(forms.Form):   # {{{
-    fromCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'From Category'}), required=False)
-    toCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'To Category'}), required=False)
-    amount = forms.FloatField(widget=forms.TextInput(attrs={'class': 'span8', 'placeholder': 'amount'}), required=False)
+    fromCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'Type New Category or choose from below'}), required=False)
+    toCategory = forms.CharField(widget=forms.TextInput(attrs={'class': 'span10', 'placeholder': 'Type New Category or choose from below'}), required=False)
+    amount = forms.FloatField(widget=forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Select/Type amount and click ->'}), required=False)
     description = forms.CharField(widget=forms.TextInput(attrs={'class': 'span8', 'placeholder': 'Any xtra desc'}), required=False)
     timestamp = forms.DateTimeField(widget=forms.TextInput(attrs={'class': 'span9', 'placeholder': '%m/%d/%Y'}), required=False)
 

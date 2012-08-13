@@ -30,7 +30,7 @@ urlpatterns = patterns('',
     (r'^search/(\w+)/$', 'settleup.TransactionsApp.views.search'),
     (r'^settleUP/$', 'settleup.TransactionsApp.views.settle_grp'),
     (r'^tabClick/(\w+)/$', 'settleup.TransactionsApp.views.tab_click'),
-    (r'^transactions/(\w+)/$', 'settleup.TransactionsApp.views.transaction_create_display'),
+    (r'^transactions/(\w+)/$', 'settleup.TransactionsApp.views.transaction_create'),
     (r'^transactionsInDetail/(\w+)/$', 'settleup.TransactionsApp.views.transaction_detail'),
     # --------------------------------------------------
     (r'^personalApp/fromCategory/$', 'settleup.personalApp.views.from_category_view'),

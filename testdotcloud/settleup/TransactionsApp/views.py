@@ -444,7 +444,7 @@ def tab_click(request, grp_id):
     return HttpResponse("done")
 
 
-def transaction_create_display(request, kind):
+def transaction_create(request, kind):
     """
     displays and process a new transaction form
     displays the number of new notifications

@@ -235,8 +235,10 @@ def statistics(request):
             xferIdToDelete = request.POST['delete']
             Transfers.objects.get(pk=xferIdToDelete).delete()
         # filter the data based in the filters
-        if request.POST['fromCategory'] != '':
+        if request.POST['fromCategory'] != '' and request.POST['fromCategory'] != 'CWS':
             transferFilters = transferFilters & Q(fromCategory_id=request.POST['fromCategory'])
+        elif request.POST['fromCategory'] == 'CWS':
+            transferFilters = transferFilters & Q(fromCategory_id__in=[x for (x,) in Categories.objects.filter(category_type='source').values_list('id')])
         if request.POST['toCategory'] != '' and request.POST['toCategory'] != 'CWS':
             transferFilters = transferFilters & Q(toCategory_id=request.POST['toCategory'])
         elif request.POST['toCategory'] == 'CWS':
@@ -252,6 +254,7 @@ def statistics(request):
             if request.POST['timeEnd'] != '':
                 transferFilters = transferFilters & Q(timestamp__lt=form.cleaned_data['timeEnd'] + datetime.timedelta(days=1))
         transferList = Transfers.objects.filter(transferFilters)
+        totalAmount = transferList.aggregate(Sum('amount'))['amount__sum']
         # use filtered transfer list insted of this    transferList = Transfers.objects.all()
         if request.POST['timeSortType'] == 'Day':
             newList = list()
@@ -264,6 +267,10 @@ def statistics(request):
             cwsToList = list()
             for i in transferList.values('toCategory').annotate(amt=Sum('amount')):
                 cwsToList.append([Categories.objects.get(pk=i['toCategory']).name, i['amt']])
+        if request.POST['fromCategory'] == 'CWS':
+            cwsFromList = list()
+            for i in transferList.values('fromCategory').annotate(amt=Sum('amount')):
+                cwsFromList.append([Categories.objects.get(pk=i['fromCategory']).name, i['amt']])
         categoryList = Categories.objects.filter(
                                     userID=loggedInUser.pk,
                                     )
@@ -275,9 +282,6 @@ def statistics(request):
                                                 'timeEnd': request.POST['timeEnd'],
                                                 })
     else:
-        transferList = Transfers.objects.filter(
-                                    transferFilters,
-                                    userID=loggedInUser.pk)
         categoryList = Categories.objects.filter(
                                     userID=loggedInUser.pk,
                                     )
@@ -291,33 +295,27 @@ def statistics(request):
     categoryDict = dict()
     for iDict in fromCategorySum:
         categoryDict[iDict['fromCategory_id']] = -iDict['sum_source']
-    toCategorySum = Transfers.objects.values(
+    toCategorySum = Transfers.objects.filter(
+                                ~Q(toCategory_id__in=[x for (x,) in Categories.objects.filter(category_type='leach').values_list('id')])
+                                ).values(
                                 'toCategory_id'
                                 ).annotate(
                                 sum_dest=Sum('amount')
                                 )
     for iDict in toCategorySum:
-        if iDict['toCategory_id'] in categoryDict.keys():
             categoryDict[iDict['toCategory_id']] += iDict['sum_dest']
-        else:
-            categoryDict[iDict['toCategory_id']] = iDict['sum_dest']
     for i in categoryList:
         if i.pk in categoryDict:
             categoryDict[i.pk] += i.initial_amt
         else:
             categoryDict[i.pk] = i.initial_amt
     categorySourceList = list()
-    categoryLeachList = list()
     sourceList = Categories.objects.filter(userID=loggedInUser.pk, category_type='source').values('id')
-    leachList = Categories.objects.filter(userID=loggedInUser.pk, category_type='leach').values('id')
     for key, value in categoryDict.iteritems():
         if {'id': key} in sourceList:
             categorySourceList.append([Categories.objects.get(pk=key).name, value])
-        if {'id': key} in leachList:
-            categoryLeachList.append([Categories.objects.get(pk=key).name, value])
     # insted of lambda fn you can use itemgetter
     categorySourceList = sorted(categorySourceList, key=lambda x: x[1], reverse=True)
-    categoryLeachList = sorted(categoryLeachList, key=lambda x: x[1], reverse=True)
     return render_to_response('personalTemplates/graph_N_list.html', locals(), context_instance=RequestContext(request))
 
 

@@ -135,22 +135,13 @@ $(document).ready(function() {
 </div>
 <div class="span4" align="right">
 <a href="/personalApp/statistics/"><i class="icon-list"></i></a></div>
-
-	<div class="span5">
-	{% for row in categorySourceList %}
-	{{ row.0 }} <b>{{ row.1|floatformat }}</b><br/>
-	{% endfor %}
-	</div>
-	<div class="span6" align="right">
-	{% for row in categoryLeachList %}
-	{{ row.0 }} <b>{{ row.1|floatformat }}</b><br/>
-	{% endfor %}
-	</div>
-
+<div>
+{% for row in categorySourceList%}
+{{row.0}} <b>{{row.1}}</b><br/>
+{% endfor %}
+</div>
 {% endblock %}
 {% block footer %}
-total over time<br/>
-each category over time
 <div id='container'> Chart will be rendered here </div>
 <form id="formID" action="" method="post" >
 {% csrf_token %} 
@@ -179,7 +170,7 @@ each category over time
 				<td>delete</td>
 			</tr>
 		</thead>
-		{% if newList == None and cwsToList == None %}
+		{% if newList == None and cwsToList == None and cwsFromList == None %}
 			{% for row in transferList %}
 			<tr>
 				<td>{{ row.id }}</td>
@@ -220,6 +211,31 @@ each category over time
 			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
 		</tr>
 		{% endfor%}
+		{% for row in cwsFromList %}
+		<tr>
+			<td></td>
+			<td>{{ row.0 }}</td>
+			<td></td>
+			<td>{{ row.1  }}</td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><a href="">edit</a></td>
+			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
+		</tr>
+		{% endfor%}
+		<tr>
+			<td></td>
+			<td></td>
+			<td>TOTAL</td>
+			<td>{{ totalAmount }}</td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><a href="">edit</a></td>
+			<td><button class="btn btn-danger" name="delete" value="{{row.id}}">delete</button></td>
+		</tr>
+		
 	</table>
 </form>
 {% endblock %}
